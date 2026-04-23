@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Phonkhub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0d0d0d;
+      color: white;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 40px;
+      background: black;
+      position: sticky;
+      top: 0;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .logo span {
+      background: orange;
+      color: black;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    nav a {
+      color: white;
+      margin-left: 25px;
+      text-decoration: none;
+    }
+
+    nav a:hover {
+      color: orange;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 100px 20px;
+      background: linear-gradient(to bottom, #000, #111);
+    }
+
+    .hero h1 {
+      font-size: 50px;
+      margin-bottom: 10px;
+    }
+
+    .hero p {
+      color: #aaa;
+      font-size: 18px;
+    }
+
+    .section {
+      padding: 40px;
+    }
+
+    .section h2 {
+      margin-bottom: 20px;
+      border-left: 5px solid orange;
+      padding-left: 10px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: #1a1a1a;
+      border-radius: 10px;
+      overflow: hidden;
+      transition: 0.2s;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      transform: scale(1.05);
+    }
+
+    .card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+
+    .card .info {
+      padding: 10px;
+    }
+
+    .card .info h3 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .card .info p {
+      color: #aaa;
+      font-size: 13px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 25px;
+      background: black;
+      color: #777;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Phonk<span>hub</span></div>
+  <nav>
+    <a href="#">Home</a>
+    <a href="#">Trending</a>
+    <a href="#">Playlists</a>
+    <a href="#">Upload</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <h1>Underground Phonk</h1>
+  <p>Discover raw, dark, and hypnotic phonk tracks.</p>
+</section>
+
+<!-- Trending -->
+<section class="section">
+  <h2>🔥 Trending</h2>
+  <div class="grid">
+    <div class="card">
+      <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e">
+      <div class="info">
+        <h3>Tokyo Drift Phonk</h3>
+        <p>by DJ Nightfall</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://images.unsplash.com/photo-1497032205916-ac775f0649ae">
+      <div class="info">
+        <h3>Neon Ride</h3>
+        <p>by LXST CXNTURY</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://images.unsplash.com/photo-1511376777868-611b54f68947">
+      <div class="info">
+        <h3>Dark Memphis</h3>
+        <p>by KSLV Noh</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4">
+      <div class="info">
+        <h3>Street Ghosts</h3>
+        <p>by DVRST</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- New Releases -->
+<section class="section">
+  <h2>🆕 New Releases</h2>
+  <div class="grid">
+    <div class="card">
+      <img src="https://images.unsplash.com/photo-1507874457470-272b3c8d8ee2">
+      <div class="info">
+        <h3>Midnight Engine</h3>
+        <p>by Ghost Rider</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f">
+      <div class="info">
+        <h3>Slow Burn</h3>
+        <p>by Phonk Killer</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745">
+      <div class="info">
+        <h3>Shadow Bass</h3>
+        <p>by Night Engine</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://images.unsplash.com/photo-1494232410401-ad00d5433cfa">
+      <div class="info">
+        <h3>Deep Drift</h3>
+        <p>by RXDXVIL</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Playlists -->
+<section class="section">
+  <h2>🎧 Playlists</h2>
+  <div class="grid">
+    <div class="card">
+      <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee">
+      <div class="info">
+        <h3>Late Night Drive</h3>
+        <p>40 tracks</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://images.unsplash.com/photo-1492724441997-5dc865305da7">
+      <div class="info">
+        <h3>Underground Hits</h3>
+        <p>25 tracks</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://images.unsplash.com/photo-1519996529931-28324d5a630e">
+      <div class="info">
+        <h3>Drift Mode</h3>
+        <p>32 tracks</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://images.unsplash.com/photo-1506157786151-b8491531f063">
+      <div class="info">
+        <h3>Dark Vibes Only</h3>
+        <p>50 tracks</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  © 2026 Phonkhub — Built for phonk lovers
+</footer>
+
+</body>
+</html>
