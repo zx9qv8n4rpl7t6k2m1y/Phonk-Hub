@@ -102,17 +102,27 @@
     }
     .search-form input::placeholder { color: #666; }
     .search-form input:focus { border-color: #ff9000; }
-    .search-form button {
-      background: #ff9000;
-      border: none;
-      border-radius: 0 2px 2px 0;
-      padding: 0 16px;
-      cursor: pointer;
-      font-size: 15px;
-      color: #000;
-      font-weight: bold;
-    }
-    .search-form button:hover { background: #e08000; }
+.search-form button {
+  background: #ff9000;
+  border: none;
+  border-radius: 0 2px 2px 0;
+  padding: 0 14px;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-form button svg {
+  width: 18px;
+  height: 18px;
+  fill: #000;
+}
+
+.search-form button:hover {
+  background: #e08000;
+}
 
     /* Search dropdown */
     .search-drop {
@@ -596,7 +606,7 @@ footer p {
 
 <div class="logo" onclick="window.scrollTo({top:0,behavior:'smooth'})">Phonk<span>hub</span></div>
   <div class="search-form">
-    <input type="text" id="si" placeholder="Search tracks, artists, albums..." oninput="ss(this.value)" onblur="hsd()">
+    <input type="text" id="si" placeholder="Search tracks, artists, Phonk,..." oninput="ss(this.value)" onblur="hsd()">
     <div class="search-drop" id="sd">
       <div class="sd-item" onclick="window.open('https://www.youtube.com/watch?v=G8yr82oFf8g','_blank')">🎵 <div><div>N Word Phonk</div><div class="sd-sub">Sigeon Pex Lover · 5.2M views</div></div></div>
       <div class="sd-item" onclick="window.open('https://www.youtube.com/watch?v=BtZksmrqX6c','_blank')">🎵 <div><div>Mommy Phonk</div><div class="sd-sub">Men Kisser · 7.4M views</div></div></div>
@@ -604,7 +614,11 @@ footer p {
       <div class="sd-item" onclick="document.getElementById('sd').style.display='none'">🎵 <div><div>Murder In My Mind</div><div class="sd-sub">KORDHELL · 24M views</div></div></div>
       <div class="sd-item" onclick="document.getElementById('sd').style.display='none'">🎵 <div><div>Drift Mode</div><div class="sd-sub">KORDHELL · 18M views</div></div></div>
     </div>
-    <button>&#128269;</button>
+<button class="search-btn">
+  <svg viewBox="0 0 24 24">
+    <path d="M21 20l-5.6-5.6a7 7 0 10-1.4 1.4L20 21l1-1zM10 16a6 6 0 110-12 6 6 0 010 12z"/>
+  </svg>
+</button>
   </div>
 
   <div class="header-right">
