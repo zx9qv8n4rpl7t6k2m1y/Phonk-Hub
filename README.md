@@ -1,17 +1,16 @@
+# 🔥 Phonkhub
+
 <p align="center">
   <img src="https://i.postimg.cc/VN368rw6/favicon.png" width="120">
 </p>
 
-<h1 align="center">🔥 Phonk-Hub</h1>
-
-<p align="center">
-  The ultimate hub for underground phonk music — heavy 808s, drift vibes, and nonstop energy.
-</p>
+## 🎧 About
+Phonkhub is the ultimate hub for underground phonk music. Discover trending tracks, new releases, and top-rated beats with heavy 808s, drift vibes, and nonstop energy — free forever.
 
 ---
 
 ## 🚀 Live Site
-👉 https://your-vercel-link.vercel.app
+https://zx9qv8n4rpl7t6k2m1y.github.io/Phonk-Hub/
 
 ---
 
@@ -24,27 +23,27 @@
 ---
 
 ## ⚡ Features
-
 - 🔥 Trending phonk tracks  
 - 🆕 New releases  
 - ⭐ Top rated music  
-- 🎧 Smooth and responsive UI  
-- 🌙 Dark mode design  
+- 🎧 Clean dark UI  
 - 🔍 Live search system  
-- 📂 Categories (Drift, Russian, Dark, Memphis, etc.)  
+- 📂 Phonk categories (Drift, Dark, Russian, Memphis)
 
 ---
 
 ## 🛠️ Built With
-
 - HTML  
 - CSS  
 - JavaScript  
 
 ---
 
-## 📦 Installation
+## ⚠️ Note
+This project is for entertainment purposes and showcases a phonk music UI concept.
 
-```bash
-git clone https://github.com/your-username/phonk-hub.git
-cd phonk-hub
+---
+
+<p align="center">
+  © 2026 Phonkhub — Built for phonk lovers 🔥
+</p>
