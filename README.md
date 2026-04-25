@@ -1,7 +1,12 @@
-# Phonkhub <img src="./images/favicon.png" width="36" style="vertical-align: middle;">
+# Phonk-Hub <img src="./images/favicon.png" width="36" style="vertical-align: middle;">
 
-## About
-### Phonk-Hub is a simple web-based music hub made for exploring and listening to phonk-style music. It is designed to be fast, lightweight, and easy to use for everyone.
+## ABOUT
+
+Phonk-Hub is a simple web-based music hub created for exploring, discovering, and listening to phonk-style music. The goal of this project is to provide a smooth, fast, and lightweight experience where users can easily access phonk tracks without distractions or unnecessary complexity.
+
+This site is designed with performance and simplicity in mind, making it easy to use on both desktop and mobile devices. It focuses on delivering a clean interface that highlights music content while keeping everything responsive and easy to navigate.
+
+Phonk-Hub is still in development and will continue to receive improvements, new features, and design updates over time to make the experience even better for users.
 
 ## Features
 - Clean and minimal design  
