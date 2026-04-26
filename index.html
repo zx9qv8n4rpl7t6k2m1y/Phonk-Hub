@@ -8,7 +8,7 @@
   <!-- ╔══════════════════════════════════════════════════════════╗
        ║  FAVICON — JUST REPLACE THE href WITH YOUR FAVICON URL  ║
        ╚══════════════════════════════════════════════════════════╝ -->
-  <link rel="icon" type="image/png" href="https://i.postimg.cc/VN368rw6/favicon.png">
+  <link rel="icon" type="image/png" href="YOUR_FAVICON_URL_HERE">
 
   <style>
     /* ─────────────────── RESET & BASE ─────────────────── */
@@ -1366,66 +1366,58 @@
    - Video cannot be paused
    - On end: fades to black → video removed → site fades in
 ═══════════════════════════════════════════════════════ */
-(function() {
-  const video   = document.getElementById('intro-video');
-  const wrap    = document.getElementById('intro-video-wrap');
+(function () {
+  const video = document.getElementById('intro-video');
+  const wrap = document.getElementById('intro-video-wrap');
   const fadeout = document.getElementById('intro-fadeout');
   const soundBtn = document.getElementById('sound-btn');
 
-  // Try to unmute right away after autoplay starts
-  video.addEventListener('play', () => {
-    video.muted = false;
-    if (video.muted) {
-      // Browser still blocking sound — show unmute button
-      soundBtn.style.display = 'block';
-    }
-  }, { once: true });
+  // Force autoplay muted (required by browsers)
+  video.muted = true;
+  video.play().catch(() => {
+    // If autoplay fails, still show button
+    soundBtn.style.display = 'block';
+  });
 
-  // Block every pause attempt
+  // User interaction = allow sound
+  function enableSound() {
+    video.muted = false;
+    video.volume = 1;
+    soundBtn.style.display = 'none';
+
+    // some browsers require re-play after unmute
+    video.play().catch(() => {});
+  }
+
+  soundBtn.addEventListener('click', enableSound);
+
+  // ALSO allow clicking anywhere on video to unmute (better UX)
+  video.addEventListener('click', enableSound);
+
+  // prevent pause hacks
   video.addEventListener('pause', () => {
     if (!video.dataset.done) video.play();
   });
 
-  // Block right-click
-  wrap.addEventListener('contextmenu', e => e.preventDefault());
-
-  // Block spacebar / K / P during intro
-  function blockKeys(e) {
-    if (['Space','KeyK','KeyP'].includes(e.code)) e.preventDefault();
-  }
-  document.addEventListener('keydown', blockKeys);
-
-  // When video ends → fade out → remove → reveal site
+  // end → fade → delete → show site
   video.addEventListener('ended', () => {
-    video.dataset.done = '1';
-    document.removeEventListener('keydown', blockKeys);
+    video.dataset.done = "1";
 
-    fadeout.classList.add('active'); // fade to black
+    fadeout.classList.add('active');
 
     setTimeout(() => {
-      // Nuke the video from the DOM
-      video.src = '';
-      video.load();
+      video.remove();
       wrap.remove();
-      // Fade the site in
       document.getElementById('site-wrap').classList.add('visible');
-    }, 950);
-  }, { once: true });
+    }, 900);
+  });
 
-  // If video can't load at all (file missing), skip to site
+  // fallback if video fails
   video.addEventListener('error', () => {
     wrap.remove();
     document.getElementById('site-wrap').classList.add('visible');
   });
 })();
-
-function unmuteVideo() {
-  const video = document.getElementById('intro-video');
-  const btn   = document.getElementById('sound-btn');
-  video.muted = false;
-  video.volume = 1;
-  btn.style.display = 'none';
-}
 
 /* ═══════════════════════════════════════════
    MODALS
