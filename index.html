@@ -726,15 +726,12 @@
   <video id="vid"
     src="video.webm"
     autoplay
+    muted
     playsinline
+    disablePictureInPicture
     controlsList="nodownload nofullscreen noremoteplayback">
   </video>
-
-  <div id="vid-progress-bar">
-    <div id="vid-progress-fill"></div>
   </div>
-
-  <button id="vid-click-start" onclick="startVideo()">Click to Start</button>
 </div>
 <!-- ╚══════════════════ END VIDEO INTRO ══════════════════╝ -->
 
@@ -1377,27 +1374,60 @@
    ╚══════════════════════════════════════════════════════════════════╝ */
 (function () {
   const videoWrap = document.getElementById('video-intro');
-  const vid = document.getElementById('vid');
-  const fill = document.getElementById('vid-progress-fill');
-  const startBtn = document.getElementById('vid-click-start');
+  const vid       = document.getElementById('vid');
+  const fill      = document.getElementById('vid-progress-fill');
+  const startBtn  = document.getElementById('vid-click-start');
 
-  function removeIntro() {
-    videoWrap.remove();
+  function revealMainIntro() {
+    // Fade out the video layer
+    videoWrap.style.transition = 'opacity 0.8s ease';
+    videoWrap.style.opacity = '0';
+    videoWrap.style.pointerEvents = 'none';
+    setTimeout(function () {
+      videoWrap.style.display = 'none';
+      // Fade in YOUR existing intro
+      document.getElementById('intro').classList.add('visible');
+    }, 800);
   }
 
-  vid.addEventListener('ended', removeIntro);
+  // Update orange progress bar
+  vid.addEventListener('timeupdate', function () {
+    if (vid.duration) {
+      fill.style.width = (vid.currentTime / vid.duration * 100) + '%';
+    }
+  });
 
+  // When video ends → show your intro
+  vid.addEventListener('ended', revealMainIntro);
+
+  // If video file is missing or broken → skip straight to your intro
+  vid.addEventListener('error', revealMainIntro);
+
+  // CANNOT PAUSE — fight back every way
+  vid.addEventListener('pause', function () { vid.play(); });
+  vid.addEventListener('click', function (e) { e.preventDefault(); vid.play(); });
+  vid.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  document.addEventListener('keydown', function (e) {
+    if (videoWrap.style.display === 'none') return;
+    if (e.code === 'Space' || e.code === 'KeyK') {
+      e.preventDefault();
+      vid.play();
+    }
+  });
+
+  // Autoplay — if blocked, show click-to-start button
   function startVideo() {
-    vid.play().catch(() => {});
+    vid.play().catch(function () {});
     startBtn.style.display = 'none';
   }
-
   window.startVideo = startVideo;
 
-  document.addEventListener("click", () => {
-    if (vid) vid.muted = false;
-  }, { once: true });
-
+  var p = vid.play();
+  if (p !== undefined) {
+    p.catch(function () {
+      startBtn.style.display = 'block';
+    });
+  }
 })();
 /* ╚══════════════════ END VIDEO INTRO SCRIPT ══════════════════╝ */
 
