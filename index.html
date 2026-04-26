@@ -8,7 +8,7 @@
   <!-- ╔══════════════════════════════════════════════════════════╗
        ║  FAVICON — JUST REPLACE THE href WITH YOUR FAVICON URL  ║
        ╚══════════════════════════════════════════════════════════╝ -->
-  <link rel="icon" type="image/png" href="YOUR_FAVICON_URL_HERE">
+  <link rel="icon" type="image/png" href="https://i.postimg.cc/VN368rw6/favicon.png">
 
   <style>
     /* ─────────────────── RESET & BASE ─────────────────── */
@@ -23,66 +23,54 @@
     }
     a { text-decoration: none; color: inherit; }
 
-    /* ╔══════════════════════════════════════════════════════════════╗
-       ║              VIDEO INTRO — ADDED HERE                       ║
-       ║  video.webm must be in the same folder as this HTML file.  ║
-       ║  Plays fullscreen, cannot pause, fades out when done.       ║
-       ╚══════════════════════════════════════════════════════════════╝ */
-    #video-intro {
-      position: fixed;
-      inset: 0;
-      z-index: 99999;
-      background: #000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: opacity 0.8s ease;
+    /* Site starts invisible — fades in after video */
+    #site-wrap { opacity: 0; transition: opacity 0.9s ease; }
+    #site-wrap.visible { opacity: 1; }
+
+    /* ── Fullscreen video wrapper ── */
+    #intro-video-wrap {
+      position: fixed; inset: 0;
+      background: #000; z-index: 9999;
     }
-    #video-intro.fade-out {
-      opacity: 0;
+    #intro-video {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
       pointer-events: none;
     }
-    #video-intro video {
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover; /* true fullscreen — fills entire viewport */
-      display: block;
-      cursor: not-allowed;
+    #intro-video::-webkit-media-controls,
+    #intro-video::-webkit-media-controls-enclosure { display: none !important; }
+
+    /* Fade-to-black layer */
+    #intro-fadeout {
+      position: absolute; inset: 0;
+      background: #000; opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.9s ease;
     }
-    /* Thin orange progress bar at the very bottom */
-    #vid-progress-bar {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      height: 3px;
-      background: rgba(255,255,255,0.1);
-      z-index: 2;
+    #intro-fadeout.active { opacity: 1; }
+
+    /* Cinematic vignette */
+    #intro-vignette {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.65) 100%);
+      pointer-events: none;
     }
-    #vid-progress-fill {
-      height: 100%;
-      width: 0%;
-      background: #ff9000;
-      transition: width 0.25s linear;
-    }
-    /* Click-to-start fallback (autoplay blocked) */
-    #vid-click-start {
+
+    /* Sound unmute button — only shows if browser blocked audio */
+    #sound-btn {
       display: none;
       position: absolute;
-      bottom: 40px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #ff9000;
-      color: #000;
-      font-weight: 900;
-      font-size: 14px;
-      text-transform: uppercase;
-      padding: 12px 32px;
-      border-radius: 3px;
-      cursor: pointer;
-      z-index: 3;
-      letter-spacing: 1px;
-      border: none;
+      bottom: 24px; right: 24px;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid rgba(255,144,0,0.6);
+      color: #ff9000;
+      font-size: 12px; font-weight: bold;
+      letter-spacing: 1px; text-transform: uppercase;
+      padding: 8px 16px; border-radius: 2px;
+      cursor: pointer; z-index: 2;
+      transition: background 0.15s;
     }
-    /* ╚══════════════════ END VIDEO INTRO ══════════════════╝ */
+    #sound-btn:hover { background: rgba(255,144,0,0.15); }
 
     /* ─────────────────── SIDEBAR ─────────────────── */
     .sidebar-overlay {
@@ -717,23 +705,25 @@
 </head>
 <body>
 
-<!-- ╔══════════════════════════════════════════════════════════════════╗
-     ║                    VIDEO INTRO                                  ║
-     ║  Put video.webm in the same folder as this HTML file.          ║
-     ║  Plays fullscreen. Cannot be paused. Fades out when finished.  ║
-     ╚══════════════════════════════════════════════════════════════════╝ -->
-<div id="video-intro">
-  <video id="vid"
+<!-- VIDEO INTRO — place video.webm in the same folder as this file -->
+<div id="intro-video-wrap">
+  <video id="intro-video"
     src="video.webm"
     autoplay
     muted
     playsinline
-    disablePictureInPicture
-    controlsList="nodownload nofullscreen noremoteplayback">
-  </video>
-  </div>
+    preload="auto"
+  ></video>
+  <div id="intro-vignette"></div>
+  <div id="intro-fadeout"></div>
+  <button id="sound-btn" onclick="unmuteVideo()">🔇 Tap for Sound</button>
 </div>
-<!-- ╚══════════════════ END VIDEO INTRO ══════════════════╝ -->
+
+<!-- Site — starts invisible, fades in after video ends -->
+<div id="site-wrap">
+
+<!-- SIDEBAR OVERLAY -->
+<div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
 
 <!-- ═══════════════════════════════════════════════════════════
      SIDEBAR — Like PornHub's left slide-in menu
@@ -1365,79 +1355,76 @@
   <p>© 2026 Phonkhub — Built for phonk lovers</p>
 </footer>
 
+</div><!-- ╚══ end #site-wrap ══╝ -->
+
 <script>
-/* ╔══════════════════════════════════════════════════════════════════╗
-   ║                    VIDEO INTRO SCRIPT                           ║
-   ║  Plays video.webm fullscreen first.                             ║
-   ║  Cannot be paused by any means.                                 ║
-   ║  When done: video fades out → your existing #intro fades in.   ║
-   ╚══════════════════════════════════════════════════════════════════╝ */
-(function () {
-  const videoWrap = document.getElementById('video-intro');
-  const vid       = document.getElementById('vid');
-  const fill      = document.getElementById('vid-progress-fill');
-  const startBtn  = document.getElementById('vid-click-start');
+/* ═══════════════════════════════════════════════════════
+   VIDEO INTRO
+   - Autoplays muted (browser requirement for no gesture)
+   - Immediately tries to unmute — works if browser allows
+   - If still muted, shows a small "tap for sound" button
+   - Video cannot be paused
+   - On end: fades to black → video removed → site fades in
+═══════════════════════════════════════════════════════ */
+(function() {
+  const video   = document.getElementById('intro-video');
+  const wrap    = document.getElementById('intro-video-wrap');
+  const fadeout = document.getElementById('intro-fadeout');
+  const soundBtn = document.getElementById('sound-btn');
 
-  function revealMainIntro() {
-    // Fade out the video layer
-    videoWrap.style.transition = 'opacity 0.8s ease';
-    videoWrap.style.opacity = '0';
-    videoWrap.style.pointerEvents = 'none';
-    setTimeout(function () {
-      videoWrap.style.display = 'none';
-      // Fade in YOUR existing intro
-      document.getElementById('intro').classList.add('visible');
-    }, 800);
-  }
-
-  // Update orange progress bar
-  vid.addEventListener('timeupdate', function () {
-    if (vid.duration) {
-      fill.style.width = (vid.currentTime / vid.duration * 100) + '%';
+  // Try to unmute right away after autoplay starts
+  video.addEventListener('play', () => {
+    video.muted = false;
+    if (video.muted) {
+      // Browser still blocking sound — show unmute button
+      soundBtn.style.display = 'block';
     }
+  }, { once: true });
+
+  // Block every pause attempt
+  video.addEventListener('pause', () => {
+    if (!video.dataset.done) video.play();
   });
 
-  // When video ends → show your intro
-  vid.addEventListener('ended', revealMainIntro);
+  // Block right-click
+  wrap.addEventListener('contextmenu', e => e.preventDefault());
 
-  // If video file is missing or broken → skip straight to your intro
-  vid.addEventListener('error', revealMainIntro);
+  // Block spacebar / K / P during intro
+  function blockKeys(e) {
+    if (['Space','KeyK','KeyP'].includes(e.code)) e.preventDefault();
+  }
+  document.addEventListener('keydown', blockKeys);
 
-  // CANNOT PAUSE — fight back every way
-  vid.addEventListener('pause', function () { vid.play(); });
-  vid.addEventListener('click', function (e) { e.preventDefault(); vid.play(); });
-  vid.addEventListener('contextmenu', function (e) { e.preventDefault(); });
-  document.addEventListener('keydown', function (e) {
-    if (videoWrap.style.display === 'none') return;
-    if (e.code === 'Space' || e.code === 'KeyK') {
-      e.preventDefault();
-      vid.play();
-    }
+  // When video ends → fade out → remove → reveal site
+  video.addEventListener('ended', () => {
+    video.dataset.done = '1';
+    document.removeEventListener('keydown', blockKeys);
+
+    fadeout.classList.add('active'); // fade to black
+
+    setTimeout(() => {
+      // Nuke the video from the DOM
+      video.src = '';
+      video.load();
+      wrap.remove();
+      // Fade the site in
+      document.getElementById('site-wrap').classList.add('visible');
+    }, 950);
+  }, { once: true });
+
+  // If video can't load at all (file missing), skip to site
+  video.addEventListener('error', () => {
+    wrap.remove();
+    document.getElementById('site-wrap').classList.add('visible');
   });
-
-  // Autoplay — if blocked, show click-to-start button
-  function startVideo() {
-    vid.play().catch(function () {});
-    startBtn.style.display = 'none';
-  }
-  window.startVideo = startVideo;
-
-  var p = vid.play();
-  if (p !== undefined) {
-    p.catch(function () {
-      startBtn.style.display = 'block';
-    });
-  }
 })();
-/* ╚══════════════════ END VIDEO INTRO SCRIPT ══════════════════╝ */
 
-/* ═══════════════════════════════════════════
-   INTRO (YOUR ORIGINAL CODE — UNTOUCHED)
-═══════════════════════════════════════════ */
-function enterSite() {
-  const intro = document.getElementById('intro');
-  intro.classList.add('hiding');
-  setTimeout(() => { intro.style.display = 'none'; }, 500);
+function unmuteVideo() {
+  const video = document.getElementById('intro-video');
+  const btn   = document.getElementById('sound-btn');
+  video.muted = false;
+  video.volume = 1;
+  btn.style.display = 'none';
 }
 
 /* ═══════════════════════════════════════════
