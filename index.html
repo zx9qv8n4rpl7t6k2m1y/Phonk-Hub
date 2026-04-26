@@ -8,7 +8,7 @@
   <!-- ╔══════════════════════════════════════════════════════════╗
        ║  FAVICON — JUST REPLACE THE href WITH YOUR FAVICON URL  ║
        ╚══════════════════════════════════════════════════════════╝ -->
-  <link rel="icon" type="image/png" href="YOUR_FAVICON_URL_HERE">
+  <link rel="icon" type="image/png" href="https://i.postimg.cc/VN368rw6/favicon.png">
 
   <style>
     /* ─────────────────── RESET & BASE ─────────────────── */
@@ -1372,47 +1372,53 @@
   const fadeout = document.getElementById('intro-fadeout');
   const soundBtn = document.getElementById('sound-btn');
 
-  // Force autoplay muted (required by browsers)
+  // FORCE start state: paused + muted
+  video.pause();
   video.muted = true;
-  video.play().catch(() => {
-    // If autoplay fails, still show button
-    soundBtn.style.display = 'block';
-  });
+  video.currentTime = 0;
 
-  // User interaction = allow sound
-  function enableSound() {
+  // Show click-to-start state
+  soundBtn.style.display = 'block';
+  soundBtn.textContent = "▶ Click to Start";
+
+  function startIntro() {
+    // enable sound
     video.muted = false;
     video.volume = 1;
+
+    // play video
+    video.play().catch(() => {});
+
+    // hide button
     soundBtn.style.display = 'none';
 
-    // some browsers require re-play after unmute
-    video.play().catch(() => {});
+    // remove click listeners so it only triggers once
+    wrap.removeEventListener('click', startIntro);
+    soundBtn.removeEventListener('click', startIntro);
   }
 
-  soundBtn.addEventListener('click', enableSound);
+  // Start on ANY user click (video or button)
+  wrap.addEventListener('click', startIntro);
+  soundBtn.addEventListener('click', startIntro);
 
-  // ALSO allow clicking anywhere on video to unmute (better UX)
-  video.addEventListener('click', enableSound);
-
-  // prevent pause hacks
+  // Block pause hacks
   video.addEventListener('pause', () => {
     if (!video.dataset.done) video.play();
   });
 
-  // end → fade → delete → show site
+  // End → fade → remove → show site
   video.addEventListener('ended', () => {
     video.dataset.done = "1";
 
     fadeout.classList.add('active');
 
     setTimeout(() => {
-      video.remove();
       wrap.remove();
       document.getElementById('site-wrap').classList.add('visible');
     }, 900);
   });
 
-  // fallback if video fails
+  // fallback if video breaks
   video.addEventListener('error', () => {
     wrap.remove();
     document.getElementById('site-wrap').classList.add('visible');
