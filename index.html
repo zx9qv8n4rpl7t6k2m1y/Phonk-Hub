@@ -5,836 +5,1605 @@
   <title>Phonkhub</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- ════════════════════════════════════════════
-       FAVICON — replace the href with your icon URL
-       ════════════════════════════════════════════ -->
-  <link rel="icon" type="image/x-icon" href="https://i.postimg.cc/VN368rw6/favicon.png">
+  <!-- ╔══════════════════════════════════════════════════════════╗
+       ║  FAVICON — JUST REPLACE THE href WITH YOUR FAVICON URL  ║
+       ╚══════════════════════════════════════════════════════════╝ -->
+  <link rel="icon" type="image/png" href="https://i.postimg.cc/VN368rw6/favicon.png">
 
   <style>
+    /* ─────────────────── RESET & BASE ─────────────────── */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
-    body { font-family: Arial, sans-serif; background: #1b1b1b; color: #fff; overflow-x: hidden; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #1b1b1b;
+      color: #ccc;
+      font-size: 13px;
+      overflow-x: hidden;
+    }
+    a { text-decoration: none; color: inherit; }
 
-    /* ═══════════════════════════════════════════════════════════
-       ║                  VIDEO INTRO SECTION                   ║
-       ═══════════════════════════════════════════════════════════
-       Place your video.webm in the same folder as this HTML file.
-       The video plays once, cannot be paused, then fades out.
-       ═══════════════════════════════════════════════════════════ */
-    #intro-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 99999;
-      background: #000;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      transition: opacity 0.8s ease;
-    }
-    #intro-overlay.fade-out {
-      opacity: 0;
-      pointer-events: none;
-    }
-    /* ambient glow behind video */
-    #intro-overlay::before {
-      content: '';
-      position: absolute;
-      width: 700px;
-      height: 400px;
-      background: radial-gradient(ellipse, rgba(255,144,0,0.18) 0%, transparent 70%);
-      border-radius: 50%;
-      pointer-events: none;
-      animation: pulse-glow 2s ease-in-out infinite alternate;
-    }
-    @keyframes pulse-glow {
-      from { transform: scale(1); opacity: 0.7; }
-      to   { transform: scale(1.08); opacity: 1; }
-    }
-    #intro-logo {
-      font-size: 2rem;
-      font-weight: 900;
-      letter-spacing: -1px;
-      margin-bottom: 24px;
-      position: relative;
-      z-index: 2;
-      animation: logo-drop 0.6s cubic-bezier(.22,1,.36,1) both;
-    }
-    @keyframes logo-drop {
-      from { opacity: 0; transform: translateY(-20px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    #intro-logo span.hub {
-      background: #ff9000;
-      color: #000;
-      padding: 2px 10px;
-      border-radius: 5px;
-      margin-left: 3px;
-    }
+    /* Site starts invisible — fades in after video */
+    #site-wrap { opacity: 0; transition: opacity 0.9s ease; }
+    #site-wrap.visible { opacity: 1; }
+
+    /* ── Fullscreen video wrapper ── */
     #intro-video-wrap {
-      position: relative;
-      z-index: 2;
-      border-radius: 4px;
-      overflow: hidden;
-      box-shadow: 0 0 60px rgba(255,144,0,0.35), 0 0 120px rgba(255,144,0,0.12);
-      max-width: 860px;
-      width: 90vw;
+      position: fixed; inset: 0;
+      background: #000; z-index: 9999;
     }
     #intro-video {
-      width: 100%;
-      display: block;
-      cursor: not-allowed;
-      outline: none;
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+      pointer-events: none;
     }
-    /* thin orange progress bar at bottom of video */
-    #intro-progress-bar {
-      height: 3px;
-      background: #333;
-      border-radius: 0 0 4px 4px;
-      overflow: hidden;
-    }
-    #intro-progress-fill {
-      height: 100%;
-      width: 0%;
-      background: #ff9000;
-      transition: width 0.3s linear;
-    }
-    /* ═══════════════════════════════════════════════════════════
-       ║              END OF VIDEO INTRO SECTION                ║
-       ═══════════════════════════════════════════════════════════ */
+    #intro-video::-webkit-media-controls,
+    #intro-video::-webkit-media-controls-enclosure { display: none !important; }
 
-    /* ── SIDEBAR ── */
-    #sidebar-overlay {
+    /* Fade-to-black layer */
+    #intro-fadeout {
+      position: absolute; inset: 0;
+      background: #000; opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.9s ease;
+    }
+    #intro-fadeout.active { opacity: 1; }
+
+    /* Cinematic vignette */
+    #intro-vignette {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.65) 100%);
+      pointer-events: none;
+    }
+
+    /* Sound unmute button — only shows if browser blocked audio */
+    #sound-btn {
+      display: none;
+      position: absolute;
+      bottom: 24px; right: 24px;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid rgba(255,144,0,0.6);
+      color: #ff9000;
+      font-size: 12px; font-weight: bold;
+      letter-spacing: 1px; text-transform: uppercase;
+      padding: 8px 16px; border-radius: 2px;
+      cursor: pointer; z-index: 2;
+      transition: background 0.15s;
+    }
+    #sound-btn:hover { background: rgba(255,144,0,0.15); }
+
+    /* ─────────────────── SIDEBAR ─────────────────── */
+    .sidebar-overlay {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 900;
+      background: rgba(0,0,0,0.7);
+      z-index: 498;
     }
-    #sidebar {
+    .sidebar-overlay.show { display: block; }
+
+    .sidebar {
       position: fixed;
-      top: 0; left: -280px;
-      width: 280px;
-      height: 100%;
-      background: #1b1b1b;
-      z-index: 901;
-      transition: left 0.25s ease;
+      top: 0;
+      left: -285px;
+      width: 285px;
+      height: 100vh;
+      background: #0e0e0e;
+      z-index: 499;
+      transition: left 0.28s ease;
       overflow-y: auto;
-      border-right: 1px solid #2a2a2a;
+      overflow-x: hidden;
+      border-right: 1px solid #1f1f1f;
+      display: flex;
+      flex-direction: column;
     }
-    #sidebar.open { left: 0; }
-    .sidebar-header {
+    .sidebar.open { left: 0; }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: #333; }
+
+    .sb-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 14px 16px;
-      border-bottom: 1px solid #2a2a2a;
+      background: #000;
+      border-bottom: 2px solid #ff9000;
+      flex-shrink: 0;
     }
-    .sidebar-logo { font-size: 1.3rem; font-weight: 900; }
-    .sidebar-logo .hub { background: #ff9000; color: #000; padding: 1px 7px; border-radius: 4px; margin-left: 2px; }
-    .sidebar-close { background: none; border: none; color: #999; font-size: 1.4rem; cursor: pointer; }
-    .sidebar-search { padding: 10px 14px; }
-    .sidebar-search input { width: 100%; background: #2a2a2a; border: 1px solid #333; color: #fff; padding: 7px 10px; border-radius: 4px; font-size: 13px; outline: none; }
-    .sidebar-section { padding: 10px 0; border-bottom: 1px solid #2a2a2a; }
-    .sidebar-section-title { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 1px; padding: 6px 16px 4px; }
-    .sidebar-item { display: flex; align-items: center; gap: 10px; padding: 9px 16px; cursor: pointer; font-size: 14px; color: #ccc; transition: background 0.15s; }
-    .sidebar-item:hover { background: #2a2a2a; color: #ff9000; }
-    .sidebar-item .icon { font-size: 16px; width: 20px; text-align: center; }
-    .sidebar-channel { display: flex; align-items: center; gap: 10px; padding: 8px 16px; cursor: pointer; font-size: 13px; color: #ccc; }
-    .sidebar-channel:hover { background: #2a2a2a; }
-    .ch-avatar { width: 32px; height: 32px; border-radius: 50%; background: #ff9000; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; color: #000; flex-shrink: 0; }
-    .ch-info { display: flex; flex-direction: column; }
-    .ch-name { font-size: 13px; color: #ddd; }
-    .ch-subs { font-size: 11px; color: #666; }
-    .sidebar-premium { margin: 14px; background: linear-gradient(135deg, #1a0a00, #3a1a00); border: 1px solid #ff9000; border-radius: 6px; padding: 14px; text-align: center; }
-    .sidebar-premium p { font-size: 12px; color: #aaa; margin-bottom: 10px; }
-    .sidebar-premium button { background: #ff9000; color: #000; border: none; padding: 8px 20px; border-radius: 4px; font-weight: 700; cursor: pointer; font-size: 13px; width: 100%; }
+    .sb-logo {
+      font-size: 22px;
+      font-weight: 900;
+      color: white;
+    }
+    .sb-logo span {
+      background: orange;
+      color: black;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+    .sb-close {
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 22px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+    }
+    .sb-close:hover { color: white; }
 
-    /* ── TOP STRIP ── */
-    .top-strip { background: #000; padding: 5px 20px; display: flex; justify-content: flex-end; gap: 14px; font-size: 12px; }
-    .top-strip a { color: #999; text-decoration: none; cursor: pointer; }
+    .sb-search {
+      padding: 12px 14px;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    .sb-search input {
+      width: 100%;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 2px;
+      outline: none;
+      color: #ddd;
+      padding: 7px 10px;
+      font-size: 12px;
+    }
+    .sb-search input::placeholder { color: #555; }
+    .sb-search input:focus { border-color: #ff9000; }
+
+    .sb-section-label {
+      padding: 10px 16px 6px;
+      font-size: 10px;
+      font-weight: 900;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .sb-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      cursor: pointer;
+      color: #aaa;
+      font-size: 13px;
+      font-weight: bold;
+      transition: background 0.15s, color 0.15s;
+      border-left: 3px solid transparent;
+    }
+    .sb-item:hover { background: #1a1a1a; color: #fff; }
+    .sb-item.active { color: #ff9000; border-left-color: #ff9000; background: #141414; }
+    .sb-item .sb-icon { font-size: 16px; width: 22px; text-align: center; flex-shrink: 0; }
+    .sb-item .sb-count { margin-left: auto; font-size: 10px; color: #555; font-weight: normal; }
+
+    .sb-divider { height: 1px; background: #1a1a1a; margin: 6px 0; }
+
+    .sb-sub-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px 8px 50px;
+      cursor: pointer;
+      color: #888;
+      font-size: 12px;
+      transition: background 0.15s, color 0.15s;
+    }
+    .sb-sub-item:hover { background: #1a1a1a; color: #ff9000; }
+
+    .sb-channel {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .sb-channel:hover { background: #1a1a1a; }
+    .sb-channel-av {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #222;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+      border: 1px solid #333;
+    }
+    .sb-channel-info { flex: 1; min-width: 0; }
+    .sb-channel-name { font-size: 12px; font-weight: bold; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sb-channel-subs { font-size: 10px; color: #666; }
+
+    .sb-premium-box {
+      margin: 12px 14px 16px;
+      background: linear-gradient(135deg, #1a0d00, #0a0a0a);
+      border: 1px solid rgba(255,144,0,0.3);
+      border-radius: 3px;
+      padding: 14px;
+      text-align: center;
+    }
+    .sb-premium-box h4 { font-size: 13px; font-weight: 900; color: #fff; margin-bottom: 4px; }
+    .sb-premium-box h4 span { color: #ff9000; }
+    .sb-premium-box p { font-size: 11px; color: #666; margin-bottom: 10px; }
+    .sb-premium-btn {
+      display: block;
+      width: 100%;
+      background: #ff9000;
+      color: #000;
+      font-weight: 900;
+      font-size: 12px;
+      text-transform: uppercase;
+      padding: 8px;
+      border: none;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+    .sb-premium-btn:hover { background: #e08000; }
+
+    /* ─────────────────── LANGUAGE DROPDOWN ─────────────────── */
+    .lang-wrap { position: relative; }
+    .lang-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-top: 2px solid #ff9000;
+      min-width: 160px;
+      z-index: 400;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    }
+    .lang-dropdown.open { display: block; }
+    .lang-opt {
+      padding: 9px 16px;
+      cursor: pointer;
+      font-size: 12px;
+      color: #aaa;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid #222;
+    }
+    .lang-opt:last-child { border: none; }
+    .lang-opt:hover { background: #222; color: #ff9000; }
+    .lang-opt.selected { color: #ff9000; }
+    .lang-flag { font-size: 16px; }
+
+    /* ─────────────────── TOP STRIP ─────────────────── */
+    .top-strip {
+      background: #000;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0 16px;
+      gap: 20px;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    .top-strip a { color: #777; font-size: 11px; cursor: pointer; }
     .top-strip a:hover { color: #ff9000; }
 
-    /* ── HEADER ── */
-    header { background: #000; padding: 10px 20px; display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 800; border-bottom: 1px solid #222; }
-    .hamburger { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; padding: 4px; }
-    .logo { font-size: 1.6rem; font-weight: 900; text-decoration: none; color: #fff; white-space: nowrap; display: flex; align-items: center; }
-    .logo .hub { background: #ff9000; color: #000; padding: 2px 9px; border-radius: 5px; margin-left: 3px; }
-    .search-wrap { flex: 1; display: flex; max-width: 480px; }
-    .search-wrap input { flex: 1; background: #2a2a2a; border: 1px solid #444; border-right: none; color: #fff; padding: 8px 12px; font-size: 14px; border-radius: 4px 0 0 4px; outline: none; }
-    .search-wrap input::placeholder { color: #666; }
-    .search-wrap button { background: #ff9000; border: none; color: #000; padding: 0 16px; border-radius: 0 4px 4px 0; cursor: pointer; font-size: 16px; font-weight: 700; }
-    .header-right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
-    .lang-wrap { position: relative; }
-    .lang-btn { background: #2a2a2a; border: 1px solid #444; color: #fff; padding: 7px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 5px; }
-    .lang-btn:hover { border-color: #ff9000; }
-    .lang-dropdown { display: none; position: absolute; top: calc(100% + 4px); right: 0; background: #222; border: 1px solid #333; border-radius: 4px; min-width: 150px; z-index: 999; }
-    .lang-dropdown.open { display: block; }
-    .lang-option { padding: 9px 14px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-    .lang-option:hover { background: #2a2a2a; color: #ff9000; }
-    .btn-login { background: none; border: 1px solid #ff9000; color: #ff9000; padding: 7px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 700; }
-    .btn-login:hover { background: #ff9000; color: #000; }
-    .btn-signup { background: #ff9000; border: none; color: #000; padding: 7px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 700; }
-    .btn-signup:hover { background: #ffaa33; }
+    /* ─────────────────── HEADER ─────────────────── */
+    header {
+      background: #000;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 300;
+      border-bottom: 2px solid #ff9000;
+    }
 
-    /* ── SEARCH RESULTS DROPDOWN ── */
-    .search-results-drop { display: none; position: absolute; top: 100%; left: 0; right: 0; background: #222; border: 1px solid #333; border-radius: 0 0 6px 6px; z-index: 9999; max-height: 300px; overflow-y: auto; }
-    .search-results-drop.open { display: block; }
-    .search-result-item { padding: 9px 14px; font-size: 13px; cursor: pointer; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; gap: 10px; }
-    .search-result-item:hover { background: #2a2a2a; }
-    .search-result-item img { width: 56px; height: 32px; object-fit: cover; border-radius: 2px; flex-shrink: 0; }
-    .search-result-item .sr-title { color: #fff; }
-    .search-result-item .sr-section { color: #ff9000; font-size: 11px; }
-    .search-no-results { padding: 14px; text-align: center; color: #666; font-size: 13px; }
-    .search-rel { position: relative; flex: 1; display: flex; }
+    .hamburger {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      cursor: pointer;
+      padding: 7px 6px;
+      flex-shrink: 0;
+      border-radius: 2px;
+    }
+    .hamburger span { display: block; width: 20px; height: 2px; background: #bbb; transition: background 0.15s; }
+    .hamburger:hover span { background: #ff9000; }
 
-    /* ── CAT NAV ── */
-    .cat-nav { background: #111; border-bottom: 1px solid #222; overflow-x: auto; white-space: nowrap; padding: 0 20px; display: flex; gap: 4px; scrollbar-width: none; }
+    /* LOGO — EXACT FROM YOUR CODE */
+    .logo {
+      font-size: 28px;
+      font-weight: bold;
+      color: white;
+      white-space: nowrap;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .logo span {
+      background: orange;
+      color: black;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    /* SEARCH */
+    .search-form {
+      flex: 1;
+      display: flex;
+      max-width: 580px;
+      position: relative;
+    }
+    .search-form input {
+      width: 100%;
+      background: #2c2c2c;
+      border: 1px solid #444;
+      border-right: none;
+      border-radius: 2px 0 0 2px;
+      outline: none;
+      color: #ddd;
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+    .search-form input::placeholder { color: #666; }
+    .search-form input:focus { border-color: #ff9000; }
+    .search-form button {
+      background: #ff9000;
+      border: none;
+      border-radius: 0 2px 2px 0;
+      padding: 0 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .search-form button svg { width: 18px; height: 18px; fill: #000; }
+    .search-form button:hover { background: #e08000; }
+
+    /* Search dropdown */
+    .search-drop {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 42px;
+      background: #1a1a1a;
+      border: 1px solid #444;
+      border-top: 2px solid #ff9000;
+      z-index: 400;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    .sd-item {
+      padding: 9px 14px;
+      cursor: pointer;
+      font-size: 12px;
+      border-bottom: 1px solid #222;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sd-item:last-child { border: none; }
+    .sd-item:hover { background: #222; color: #ff9000; }
+    .sd-text { flex: 1; }
+    .sd-title { font-weight: bold; color: #ddd; }
+    .sd-sub { font-size: 11px; color: #666; margin-top: 1px; }
+    .sd-item:hover .sd-title { color: #ff9000; }
+    .no-results {
+      padding: 14px;
+      font-size: 12px;
+      color: #666;
+      text-align: center;
+    }
+
+    /* Header right */
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+    .h-btn {
+      border: none;
+      border-radius: 2px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .h-btn-ghost { background: transparent; color: #ccc; border: 1px solid #555; }
+    .h-btn-ghost:hover { border-color: #ff9000; color: #ff9000; }
+    .h-btn-orange { background: #ff9000; color: #000; }
+    .h-btn-orange:hover { background: #e08000; }
+    .h-upload { color: #aaa; font-size: 12px; cursor: pointer; padding: 6px 10px; }
+    .h-upload:hover { color: #ff9000; }
+
+    /* ─────────────────── CATEGORY NAV ─────────────────── */
+    .cat-nav {
+      background: #282828;
+      display: flex;
+      overflow-x: auto;
+      scrollbar-width: none;
+      border-bottom: 1px solid #333;
+      position: sticky;
+      top: 52px;
+      z-index: 200;
+    }
     .cat-nav::-webkit-scrollbar { display: none; }
-    .cat-tab { display: inline-block; padding: 10px 16px; font-size: 13px; color: #aaa; cursor: pointer; border-bottom: 3px solid transparent; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; transition: color 0.15s; }
-    .cat-tab:hover { color: #fff; }
-    .cat-tab.active { color: #ff9000; border-bottom-color: #ff9000; }
+    .cat-nav a {
+      color: #bbb;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      padding: 10px 14px;
+      white-space: nowrap;
+      border-bottom: 3px solid transparent;
+      display: block;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+    }
+    .cat-nav a:hover { color: #fff; background: #333; }
+    .cat-nav a.active { color: #ff9000; border-bottom-color: #ff9000; }
 
-    /* ── MAIN LAYOUT ── */
-    .page-body { display: flex; gap: 0; }
-    main { flex: 1; padding: 22px 20px; min-width: 0; }
-    .section { margin-bottom: 36px; }
-    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-    .section-title { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-    .section-title .fire { color: #ff9000; }
-    .section-see-all { font-size: 13px; color: #ff9000; cursor: pointer; text-decoration: none; }
-    .section-see-all:hover { text-decoration: underline; }
+    /* ─────────────────── PAGE ─────────────────── */
+    .page {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 16px 12px;
+    }
 
-    /* ── VIDEO GRID ── */
-    .video-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-    @media (max-width: 1100px) { .video-grid { grid-template-columns: repeat(3, 1fr); } }
-    @media (max-width: 750px) { .video-grid { grid-template-columns: repeat(2, 1fr); } .right-sidebar { display: none; } }
+    /* Welcome bar */
+    .welcome-bar {
+      background: #000;
+      border-left: 3px solid #ff9000;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+    .welcome-bar h2 { font-size: 16px; font-weight: 900; color: #fff; }
+    .welcome-bar h2 span { color: #ff9000; }
+    .welcome-bar p { font-size: 12px; color: #777; margin-top: 2px; }
+    .wb-btn {
+      background: #ff9000;
+      color: #000;
+      font-weight: 900;
+      font-size: 12px;
+      text-transform: uppercase;
+      padding: 9px 20px;
+      border-radius: 2px;
+      white-space: nowrap;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .wb-btn:hover { background: #e08000; }
 
-    /* ── CARD ── */
-    .card { cursor: pointer; text-decoration: none; display: block; }
+    /* ─────────────────── SECTIONS ─────────────────── */
+    .section { margin-bottom: 28px; }
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #252525;
+      padding-bottom: 8px;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 900;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title::before {
+      content: '';
+      width: 3px;
+      height: 18px;
+      background: #ff9000;
+      display: inline-block;
+      border-radius: 1px;
+    }
+    .see-all { color: #ff9000; font-size: 11px; font-weight: bold; text-transform: uppercase; cursor: pointer; letter-spacing: 0.4px; }
+    .see-all:hover { text-decoration: underline; }
+
+    /* ─────────────────── GRID ─────────────────── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 1100px) { .grid { grid-template-columns: repeat(4,1fr); } }
+    @media (max-width: 860px)  { .grid { grid-template-columns: repeat(3,1fr); } }
+    @media (max-width: 560px)  { .grid { grid-template-columns: repeat(2,1fr); } }
+
+    /* ─────────────────── CARD ─────────────────── */
+    .card {
+      display: block;
+      color: #ccc;
+      cursor: pointer;
+    }
     .card:hover .card-title { color: #ff9000; }
-    .thumb-wrap { position: relative; width: 100%; padding-top: 56.25%; background: #111; overflow: hidden; border-radius: 3px; }
-    .thumb-wrap img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.25s ease; }
-    .card:hover .thumb-wrap img { transform: scale(1.04); }
-    .play-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0); display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
-    .card:hover .play-overlay { background: rgba(0,0,0,0.4); }
-    .play-btn { width: 44px; height: 44px; border-radius: 50%; background: rgba(255,144,0,0.9); display: flex; align-items: center; justify-content: center; font-size: 16px; opacity: 0; transition: opacity 0.2s; color: #000; padding-left: 3px; }
-    .card:hover .play-btn { opacity: 1; }
-    .duration { position: absolute; bottom: 6px; right: 6px; background: rgba(0,0,0,0.8); font-size: 11px; padding: 2px 5px; border-radius: 2px; }
-    .hd-badge { position: absolute; bottom: 6px; left: 6px; background: rgba(255,144,0,0.9); color: #000; font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 2px; }
-    .card-info { padding: 8px 0 4px; }
-    .card-title { font-size: 13px; color: #ddd; line-height: 1.35; max-height: 2.7em; overflow: hidden; font-weight: 600; transition: color 0.15s; }
-    .card-meta { display: flex; align-items: center; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
-    .card-channel { font-size: 12px; color: #ff9000; cursor: pointer; }
+    .card:hover .thumb img { transform: scale(1.04); }
+    .card:hover .play-overlay { opacity: 1; }
+
+    .thumb {
+      position: relative;
+      overflow: hidden;
+      aspect-ratio: 16/9;
+      background: #111;
+      border-radius: 1px;
+    }
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.3s;
+    }
+    .thumb-progress {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      background: rgba(255,255,255,0.12);
+    }
+    .thumb-progress-fill { height: 100%; background: #ff9000; }
+    .dur {
+      position: absolute;
+      bottom: 6px; right: 6px;
+      background: rgba(0,0,0,0.85);
+      color: #fff;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 1px 5px;
+      border-radius: 2px;
+      letter-spacing: 0.3px;
+    }
+    .badge {
+      position: absolute;
+      bottom: 6px; left: 6px;
+      color: #ff9000;
+      font-size: 10px;
+      font-weight: 900;
+      background: rgba(0,0,0,0.75);
+      border: 1px solid rgba(255,144,0,0.5);
+      padding: 1px 4px;
+      border-radius: 1px;
+      letter-spacing: 0.5px;
+    }
+    .play-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.38);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.18s;
+    }
+    .play-circle {
+      width: 46px; height: 46px;
+      background: rgba(255,144,0,0.92);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .play-circle svg { width: 20px; height: 20px; fill: #fff; margin-left: 3px; }
+
+    .card-info { padding: 6px 0 0; }
+    .card-title {
+      font-size: 12px;
+      font-weight: bold;
+      color: #ddd;
+      line-height: 1.4;
+      margin-bottom: 3px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .card-channel { font-size: 11px; color: #ff9000; margin-bottom: 2px; }
     .card-channel:hover { text-decoration: underline; }
-    .card-views { font-size: 12px; color: #777; }
-    .card-dot { color: #555; font-size: 10px; }
-    .card-time { font-size: 12px; color: #777; }
-    .rating-bar { height: 3px; background: #333; border-radius: 2px; margin-top: 5px; overflow: hidden; }
-    .rating-fill { height: 100%; background: #ff9000; border-radius: 2px; }
+    .card-stats { font-size: 11px; color: #666; display: flex; gap: 8px; }
 
-    /* ── RIGHT SIDEBAR ── */
-    .right-sidebar { width: 240px; flex-shrink: 0; padding: 22px 16px 22px 0; }
-    .rs-widget { background: #111; border-radius: 4px; padding: 14px; margin-bottom: 20px; border: 1px solid #222; }
-    .rs-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #ff9000; margin-bottom: 12px; }
-    .top-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #1e1e1e; font-size: 13px; color: #ccc; cursor: pointer; }
-    .top-item:last-child { border-bottom: none; }
-    .top-item:hover { color: #ff9000; }
-    .top-num { width: 18px; text-align: center; font-size: 11px; color: #555; font-weight: 700; flex-shrink: 0; }
-    .tag-cloud { display: flex; flex-wrap: wrap; gap: 6px; }
-    .tag { background: #2a2a2a; color: #aaa; font-size: 11px; padding: 4px 8px; border-radius: 3px; cursor: pointer; }
-    .tag:hover { background: #ff9000; color: #000; }
+    /* No results message */
+    .no-cards-msg {
+      display: none;
+      grid-column: 1 / -1;
+      padding: 40px;
+      text-align: center;
+      color: #555;
+      font-size: 14px;
+    }
 
-    /* ── NO RESULTS ── */
-    .no-results { display: none; padding: 40px; text-align: center; color: #666; font-size: 15px; }
-    .no-results.show { display: block; }
+    /* ─────────────────── FOOTER ─────────────────── */
+    footer {
+      background: #000;
+      border-top: 2px solid #ff9000;
+      padding: 24px 16px;
+      margin-top: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+    .foot-logo { font-size: 20px; font-weight: bold; line-height: 1; }
+    .foot-logo span { background: orange; color: black; padding: 2px 6px; border-radius: 3px; }
+    .foot-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px 16px; max-width: 900px; }
+    .foot-links a { color: #555; font-size: 11px; cursor: pointer; }
+    .foot-links a:hover { color: #ff9000; }
+    footer p { color: #3a3a3a; font-size: 11px; }
 
-    /* ── FOOTER ── */
-    footer { background: #000; border-top: 1px solid #222; padding: 28px 20px; }
-    .footer-logo { font-size: 1.4rem; font-weight: 900; margin-bottom: 16px; display: inline-flex; align-items: center; }
-    .footer-logo .hub { background: #ff9000; color: #000; padding: 2px 8px; border-radius: 5px; margin-left: 3px; }
-    .footer-links { display: flex; flex-wrap: wrap; gap: 18px; margin-bottom: 16px; }
-    .footer-links a { color: #666; font-size: 13px; text-decoration: none; cursor: pointer; }
-    .footer-links a:hover { color: #ff9000; }
-    .footer-copy { color: #444; font-size: 12px; }
-
-    /* ── MODALS ── */
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 5000; align-items: center; justify-content: center; }
-    .modal-overlay.open { display: flex; }
-    .modal { background: #1b1b1b; border: 1px solid #333; border-radius: 8px; padding: 32px; width: 100%; max-width: 380px; position: relative; }
-    .modal h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
-    .modal h2 span { color: #ff9000; }
-    .modal p { color: #888; font-size: 13px; margin-bottom: 20px; }
-    .modal-close { position: absolute; top: 14px; right: 16px; background: none; border: none; color: #888; font-size: 20px; cursor: pointer; line-height: 1; }
-    .modal-close:hover { color: #fff; }
-    .modal input { width: 100%; background: #2a2a2a; border: 1px solid #444; color: #fff; padding: 10px 12px; border-radius: 4px; font-size: 14px; margin-bottom: 12px; outline: none; }
+    /* ─────────────────── MODALS ─────────────────── */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+    }
+    .overlay.open { display: flex; }
+    .modal {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-top: 3px solid #ff9000;
+      border-radius: 3px;
+      padding: 32px 36px;
+      width: 100%;
+      max-width: 380px;
+      position: relative;
+    }
+    .modal-x {
+      position: absolute;
+      top: 12px; right: 14px;
+      background: none; border: none;
+      color: #777; font-size: 20px;
+      cursor: pointer; line-height: 1;
+    }
+    .modal-x:hover { color: #fff; }
+    .modal h2 { font-size: 20px; font-weight: 900; color: #fff; margin-bottom: 4px; }
+    .modal h2 em { color: #ff9000; font-style: normal; }
+    .modal p { color: #666; font-size: 12px; margin-bottom: 20px; }
+    .modal input {
+      width: 100%; display: block;
+      background: #2a2a2a; border: 1px solid #444;
+      border-radius: 2px; outline: none;
+      color: #ddd; padding: 10px 12px;
+      font-size: 13px; margin-bottom: 10px;
+    }
     .modal input:focus { border-color: #ff9000; }
-    .modal-submit { width: 100%; background: #ff9000; color: #000; border: none; padding: 11px; border-radius: 4px; font-weight: 700; font-size: 15px; cursor: pointer; }
-    .modal-submit:hover { background: #ffaa33; }
-    .modal-switch { text-align: center; margin-top: 14px; font-size: 13px; color: #888; }
-    .modal-switch a { color: #ff9000; cursor: pointer; }
+    .modal input::placeholder { color: #555; }
+    .modal-submit {
+      width: 100%;
+      background: #ff9000; color: #000;
+      font-weight: 900; font-size: 14px;
+      text-transform: uppercase; padding: 11px;
+      border: none; border-radius: 2px;
+      cursor: pointer; margin-top: 4px;
+    }
+    .modal-submit:hover { background: #e08000; }
+    .modal-foot { text-align: center; margin-top: 14px; font-size: 12px; color: #666; }
+    .modal-foot a { color: #ff9000; cursor: pointer; font-weight: bold; }
 
-    /* ── INFO POPUP ── */
-    .info-popup { display: none; position: fixed; bottom: 24px; right: 24px; background: #222; border: 1px solid #333; border-radius: 8px; padding: 16px 20px; z-index: 9999; font-size: 14px; max-width: 300px; animation: slide-up 0.3s ease; }
-    .info-popup.show { display: block; }
-    @keyframes slide-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .info-popup button { background: none; border: none; color: #ff9000; cursor: pointer; font-size: 18px; float: right; line-height: 1; margin-top: -4px; }
+    .upload-drop {
+      border: 2px dashed #444; border-radius: 3px;
+      padding: 28px; text-align: center; margin-bottom: 12px;
+      cursor: pointer;
+    }
+    .upload-drop:hover { border-color: #ff9000; }
+    .upload-drop .ud-icon { font-size: 36px; margin-bottom: 6px; }
+    .upload-drop p { font-size: 12px; color: #666; }
+    .upload-drop strong { color: #ff9000; }
   </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════════════════════════
-     ║                    VIDEO INTRO OVERLAY                        ║
-     ║  Plays video.webm once on load — cannot be paused or skipped. ║
-     ║  After playback ends, fades out and reveals the site.         ║
-     ║  PUT video.webm IN THE SAME FOLDER AS THIS HTML FILE.        ║
-     ═══════════════════════════════════════════════════════════════════ -->
-<div id="intro-overlay">
-  <div id="intro-logo">Phonk<span class="hub">hub</span></div>
-  <div id="intro-video-wrap">
-    <video id="intro-video"
-      src="video.webm"
-      autoplay
-      muted
-      playsinline
-      disablePictureInPicture
-      controlsList="nodownload nofullscreen noremoteplayback">
-    </video>
-    <div id="intro-progress-bar"><div id="intro-progress-fill"></div></div>
+<!-- VIDEO INTRO — place video.webm in the same folder as this file -->
+<div id="intro-video-wrap">
+  <video id="intro-video"
+    src="video.webm"
+    autoplay
+    muted
+    playsinline
+    preload="auto"
+  ></video>
+  <div id="intro-vignette"></div>
+  <div id="intro-fadeout"></div>
+  <button id="sound-btn" onclick="unmuteVideo()">🔇 Tap for Sound</button>
+</div>
+
+<!-- Site — starts invisible, fades in after video ends -->
+<div id="site-wrap">
+
+<!-- SIDEBAR OVERLAY -->
+<div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SIDEBAR — Like PornHub's left slide-in menu
+     ═══════════════════════════════════════════════════════════ -->
+<div class="sidebar" id="sidebar">
+
+  <div class="sb-header">
+    <div class="sb-logo">Phonk<span>hub</span></div>
+    <button class="sb-close" onclick="closeSidebar()">&times;</button>
+  </div>
+
+  <div class="sb-search">
+    <input type="text" placeholder="Search Phonkhub..." oninput="sidebarSearch(this.value)">
+  </div>
+
+  <div class="sb-section-label">Navigation</div>
+
+  <div class="sb-item active" id="sb-home" onclick="navTo('all'); closeSidebar(); setSbActive('sb-home')">
+    <span class="sb-icon">🏠</span> Home
+  </div>
+  <div class="sb-item" id="sb-trending" onclick="navTo('trending'); closeSidebar(); setSbActive('sb-trending')">
+    <span class="sb-icon">🔥</span> Trending <span class="sb-count">Hot</span>
+  </div>
+  <div class="sb-item" id="sb-new" onclick="navTo('new-releases'); closeSidebar(); setSbActive('sb-new')">
+    <span class="sb-icon">🆕</span> New Releases
+  </div>
+  <div class="sb-item" id="sb-top" onclick="navTo('top-rated'); closeSidebar(); setSbActive('sb-top')">
+    <span class="sb-icon">⭐</span> Top Rated
+  </div>
+
+  <div class="sb-divider"></div>
+  <div class="sb-section-label">Categories</div>
+
+  <div class="sb-sub-item" onclick="navTo('trending'); closeSidebar()">🚗 Drift Phonk</div>
+  <div class="sb-sub-item" onclick="navTo('trending'); closeSidebar()">🇷🇺 Russian Phonk</div>
+  <div class="sb-sub-item" onclick="navTo('trending'); closeSidebar()">🌑 Dark Phonk</div>
+  <div class="sb-sub-item" onclick="navTo('new-releases'); closeSidebar()">🌙 Lofi Phonk</div>
+  <div class="sb-sub-item" onclick="navTo('trending'); closeSidebar()">🔔 Cowbell</div>
+  <div class="sb-sub-item" onclick="navTo('new-releases'); closeSidebar()">🎸 Memphis</div>
+  <div class="sb-sub-item" onclick="navTo('trending'); closeSidebar()">⚡ Turbo Phonk</div>
+  <div class="sb-sub-item" onclick="navTo('new-releases'); closeSidebar()">🎚️ Slowed + Reverb</div>
+
+  <div class="sb-divider"></div>
+  <div class="sb-section-label">Featured Channels</div>
+
+  <div class="sb-channel">
+    <div class="sb-channel-av">🎵</div>
+    <div class="sb-channel-info">
+      <div class="sb-channel-name">KORDHELL</div>
+      <div class="sb-channel-subs">4.2M subscribers</div>
+    </div>
+  </div>
+  <div class="sb-channel">
+    <div class="sb-channel-av">🔥</div>
+    <div class="sb-channel-info">
+      <div class="sb-channel-name">PHARAOH</div>
+      <div class="sb-channel-subs">2.8M subscribers</div>
+    </div>
+  </div>
+  <div class="sb-channel">
+    <div class="sb-channel-av">🌑</div>
+    <div class="sb-channel-info">
+      <div class="sb-channel-name">night lovell</div>
+      <div class="sb-channel-subs">1.9M subscribers</div>
+    </div>
+  </div>
+  <div class="sb-channel">
+    <div class="sb-channel-av">🚗</div>
+    <div class="sb-channel-info">
+      <div class="sb-channel-name">Soudiere</div>
+      <div class="sb-channel-subs">1.4M subscribers</div>
+    </div>
+  </div>
+
+  <div class="sb-divider"></div>
+  <div class="sb-section-label">Account</div>
+
+  <div class="sb-item" onclick="om('m-login'); closeSidebar()">
+    <span class="sb-icon">👤</span> Log In
+  </div>
+  <div class="sb-item" onclick="om('m-signup'); closeSidebar()">
+    <span class="sb-icon">✉️</span> Sign Up Free
+  </div>
+  <div class="sb-item" onclick="om('m-upload'); closeSidebar()">
+    <span class="sb-icon">⬆️</span> Upload Track
+  </div>
+
+  <div class="sb-premium-box">
+    <h4>Phonk<span>hub+</span></h4>
+    <p>No ads · FLAC downloads · exclusive drops</p>
+    <button class="sb-premium-btn" onclick="alert('Phonkhub+ — coming soon! 🔥')">Upgrade $4.99/mo</button>
+  </div>
+
+</div>
+<!-- ═══ END SIDEBAR ═══ -->
+
+<!-- MODALS -->
+<div class="overlay" id="m-login">
+  <div class="modal">
+    <button class="modal-x" onclick="cm('m-login')">&times;</button>
+    <h2>Log In to <em>Phonkhub</em></h2>
+    <p>Welcome back. The phonk never stops.</p>
+    <input type="text" placeholder="Username or Email">
+    <input type="password" placeholder="Password">
+    <button class="modal-submit" onclick="alert('Logged in! 🔥'); cm('m-login')">Log In</button>
+    <div class="modal-foot">No account? <a onclick="sm('m-login','m-signup')">Sign Up Free</a></div>
   </div>
 </div>
-<!-- ═══════════════════════════════════════════════════════════════════
-     ║                  END VIDEO INTRO OVERLAY                      ║
-     ═══════════════════════════════════════════════════════════════════ -->
 
-<!-- SIDEBAR -->
-<div id="sidebar-overlay" onclick="closeSidebar()"></div>
-<nav id="sidebar">
-  <div class="sidebar-header">
-    <div class="sidebar-logo">Phonk<span class="hub">hub</span></div>
-    <button class="sidebar-close" onclick="closeSidebar()">✕</button>
+<div class="overlay" id="m-signup">
+  <div class="modal">
+    <button class="modal-x" onclick="cm('m-signup')">&times;</button>
+    <h2>Join <em>Phonkhub</em></h2>
+    <p>Create your free account. No credit card needed.</p>
+    <input type="text" placeholder="Username">
+    <input type="email" placeholder="Email address">
+    <input type="password" placeholder="Password">
+    <button class="modal-submit" onclick="alert('Account created! Welcome to Phonkhub 🔥'); cm('m-signup')">Create Account</button>
+    <div class="modal-foot">Already have an account? <a onclick="sm('m-signup','m-login')">Log In</a></div>
   </div>
-  <div class="sidebar-search"><input type="text" placeholder="Search PhonkHub..." oninput="sidebarSearch(this.value)"></div>
-  <div class="sidebar-section">
-    <div class="sidebar-section-title">Menu</div>
-    <div class="sidebar-item" onclick="filterSection('home');closeSidebar()"><span class="icon">🏠</span> Home</div>
-    <div class="sidebar-item" onclick="filterSection('trending');closeSidebar()"><span class="icon">🔥</span> Trending</div>
-    <div class="sidebar-item" onclick="filterSection('new');closeSidebar()"><span class="icon">🆕</span> New Releases</div>
-    <div class="sidebar-item" onclick="filterSection('top');closeSidebar()"><span class="icon">⭐</span> Top Rated</div>
-    <div class="sidebar-item" onclick="filterSection('drift');closeSidebar()"><span class="icon">🚗</span> Drift Phonk</div>
-    <div class="sidebar-item" onclick="filterSection('russian');closeSidebar()"><span class="icon">🎼</span> Russian Phonk</div>
-    <div class="sidebar-item" onclick="filterSection('brazilian');closeSidebar()"><span class="icon">🌴</span> Brazilian Funk</div>
+</div>
+
+<div class="overlay" id="m-upload">
+  <div class="modal" style="max-width:440px">
+    <button class="modal-x" onclick="cm('m-upload')">&times;</button>
+    <h2>Upload a <em>Track</em></h2>
+    <p>Share your phonk with the world for free.</p>
+    <div class="upload-drop" onclick="alert('File picker would open here — connect to your backend!')">
+      <div class="ud-icon">🎵</div>
+      <p><strong>Click to choose a file</strong> or drag & drop</p>
+      <p style="margin-top:4px">MP3 · WAV · FLAC — up to 50MB</p>
+    </div>
+    <input type="text" placeholder="Track title">
+    <input type="text" placeholder="Artist name">
+    <input type="text" placeholder="Genre (e.g. Drift Phonk)">
+    <button class="modal-submit" onclick="alert('Track uploaded! 🔥'); cm('m-upload')">Upload Track</button>
   </div>
-  <div class="sidebar-section">
-    <div class="sidebar-section-title">Featured Channels</div>
-    <div class="sidebar-channel"><div class="ch-avatar">FP</div><div class="ch-info"><span class="ch-name">Freaks Phonk</span><span class="ch-subs">1.2M subscribers</span></div></div>
-    <div class="sidebar-channel"><div class="ch-avatar">DK</div><div class="ch-info"><span class="ch-name">Drift Kings</span><span class="ch-subs">890K subscribers</span></div></div>
-    <div class="sidebar-channel"><div class="ch-avatar">NP</div><div class="ch-info"><span class="ch-name">NightPhonk</span><span class="ch-subs">540K subscribers</span></div></div>
-    <div class="sidebar-channel"><div class="ch-avatar">RP</div><div class="ch-info"><span class="ch-name">Russian Phonk HQ</span><span class="ch-subs">420K subscribers</span></div></div>
-  </div>
-  <div class="sidebar-section">
-    <div class="sidebar-section-title">Account</div>
-    <div class="sidebar-item" onclick="openModal('login')"><span class="icon">🔑</span> Log In</div>
-    <div class="sidebar-item" onclick="openModal('signup')"><span class="icon">✍️</span> Sign Up</div>
-    <div class="sidebar-item" onclick="openModal('upload')"><span class="icon">⬆️</span> Upload Track</div>
-  </div>
-  <div class="sidebar-premium">
-    <p>Unlock all tracks, lossless audio & no ads</p>
-    <button onclick="showPopup('Phonkhub Premium coming soon! 🔥')">Get Premium</button>
-  </div>
-</nav>
+</div>
 
 <!-- TOP STRIP -->
 <div class="top-strip">
-  <a onclick="showPopup('Advertise on Phonkhub — contact us at ads@phonkhub.com')">Advertise</a>
-  <a onclick="showPopup('Upload your phonk tracks and grow your audience!')">Upload</a>
-  <a onclick="showPopup('Phonkhub Premium — Ad-free lossless streaming. Coming soon.')">Premium</a>
-  <a onclick="openModal('login')">Log In</a>
-  <a onclick="openModal('signup')">Sign Up</a>
+  <a onclick="om('m-login')">Log In</a>
+  <a onclick="om('m-signup')">Sign Up</a>
+  <a onclick="om('m-upload')">Upload</a>
+  <div class="lang-wrap">
+    <a id="lang-btn" onclick="toggleLang(event)">🌐 <span id="lang-label">EN</span> ▾</a>
+    <div class="lang-dropdown" id="lang-drop">
+      <div class="lang-opt selected" onclick="setLang('EN','English','en')"><span class="lang-flag">🇺🇸</span> English</div>
+      <div class="lang-opt" onclick="setLang('ES','Español','es')"><span class="lang-flag">🇪🇸</span> Español</div>
+      <div class="lang-opt" onclick="setLang('FR','Français','fr')"><span class="lang-flag">🇫🇷</span> Français</div>
+      <div class="lang-opt" onclick="setLang('DE','Deutsch','de')"><span class="lang-flag">🇩🇪</span> Deutsch</div>
+      <div class="lang-opt" onclick="setLang('PT','Português','pt')"><span class="lang-flag">🇧🇷</span> Português</div>
+      <div class="lang-opt" onclick="setLang('RU','Русский','ru')"><span class="lang-flag">🇷🇺</span> Русский</div>
+      <div class="lang-opt" onclick="setLang('JA','日本語','ja')"><span class="lang-flag">🇯🇵</span> 日本語</div>
+    </div>
+  </div>
 </div>
 
 <!-- HEADER -->
 <header>
-  <button class="hamburger" onclick="openSidebar()">☰</button>
-  <a class="logo" href="#" onclick="filterSection('home')">Phonk<span class="hub">hub</span></a>
-  <div class="search-rel">
-    <div class="search-wrap">
-      <input id="search-input" type="text" placeholder="Search phonk tracks, artists..." oninput="liveSearch(this.value)" onkeydown="if(event.key==='Enter')doSearch()">
-      <button onclick="doSearch()">🔍</button>
-    </div>
-    <div class="search-results-drop" id="search-drop"></div>
+  <div class="hamburger" onclick="openSidebar()">
+    <span></span><span></span><span></span>
   </div>
+
+  <div class="logo" onclick="navTo('all'); window.scrollTo({top:0,behavior:'smooth'})">Phonk<span>hub</span></div>
+
+  <div class="search-form">
+    <input type="text" id="si"
+      placeholder="Search tracks, artists, Phonk,..."
+      oninput="liveSearch(this.value)"
+      onblur="setTimeout(()=>{document.getElementById('sd').style.display='none'},200)"
+      onfocus="if(this.value.trim()) document.getElementById('sd').style.display='block'">
+    <div class="search-drop" id="sd"></div>
+    <button onclick="doSearch()">
+      <svg viewBox="0 0 24 24"><path d="M21 20l-5.6-5.6a7 7 0 10-1.4 1.4L20 21l1-1zM10 16a6 6 0 110-12 6 6 0 010 12z"/></svg>
+    </button>
+  </div>
+
   <div class="header-right">
-    <div class="lang-wrap">
-      <button class="lang-btn" onclick="toggleLang()" id="lang-btn">🌐 EN ▾</button>
-      <div class="lang-dropdown" id="lang-drop">
-        <div class="lang-option" onclick="setLang('🇺🇸','EN','en')">🇺🇸 English</div>
-        <div class="lang-option" onclick="setLang('🇷🇺','RU','ru')">🇷🇺 Русский</div>
-        <div class="lang-option" onclick="setLang('🇧🇷','PT','pt')">🇧🇷 Português</div>
-        <div class="lang-option" onclick="setLang('🇩🇪','DE','de')">🇩🇪 Deutsch</div>
-        <div class="lang-option" onclick="setLang('🇯🇵','JA','ja')">🇯🇵 日本語</div>
-        <div class="lang-option" onclick="setLang('🇫🇷','FR','fr')">🇫🇷 Français</div>
-        <div class="lang-option" onclick="setLang('🇪🇸','ES','es')">🇪🇸 Español</div>
-      </div>
-    </div>
-    <button class="btn-login" onclick="openModal('login')">Log In</button>
-    <button class="btn-signup" onclick="openModal('signup')">Sign Up</button>
+    <a class="h-upload" onclick="om('m-upload')">⬆ Upload</a>
+    <button class="h-btn h-btn-ghost" onclick="om('m-login')">Log In</button>
+    <button class="h-btn h-btn-orange" onclick="om('m-signup')">Sign Up</button>
   </div>
 </header>
 
-<!-- CAT NAV -->
-<div class="cat-nav" id="cat-nav">
-  <div class="cat-tab active" onclick="filterSection('home')" data-section="home">Home</div>
-  <div class="cat-tab" onclick="filterSection('trending')" data-section="trending">🔥 Trending</div>
-  <div class="cat-tab" onclick="filterSection('new')" data-section="new">New Releases</div>
-  <div class="cat-tab" onclick="filterSection('top')" data-section="top">Top Rated</div>
-  <div class="cat-tab" onclick="filterSection('drift')" data-section="drift">Drift Phonk</div>
-  <div class="cat-tab" onclick="filterSection('russian')" data-section="russian">Russian Phonk</div>
-  <div class="cat-tab" onclick="filterSection('brazilian')" data-section="brazilian">Brazilian Funk</div>
-  <div class="cat-tab" onclick="filterSection('dark')" data-section="dark">Dark Phonk</div>
-  <div class="cat-tab" onclick="filterSection('lofi')" data-section="lofi">Lo-Fi</div>
+<!-- CATEGORY NAV -->
+<div class="cat-nav">
+  <a class="active" data-target="all"     onclick="navTo('all');          setNavActive(this)">Home</a>
+  <a               data-target="trending" onclick="navTo('trending');     setNavActive(this)">Trending</a>
+  <a               data-target="new-releases" onclick="navTo('new-releases'); setNavActive(this)">New Releases</a>
+  <a               data-target="top-rated"    onclick="navTo('top-rated');    setNavActive(this)">Top Rated</a>
+  <a               data-target="trending" onclick="navTo('trending');     setNavActive(this)">Drift Phonk</a>
+  <a               data-target="trending" onclick="navTo('trending');     setNavActive(this)">Russian Phonk</a>
+  <a               data-target="trending" onclick="navTo('trending');     setNavActive(this)">Dark Phonk</a>
+  <a               data-target="new-releases" onclick="navTo('new-releases'); setNavActive(this)">Lofi Phonk</a>
+  <a               data-target="trending" onclick="navTo('trending');     setNavActive(this)">Cowbell</a>
+  <a               data-target="new-releases" onclick="navTo('new-releases'); setNavActive(this)">Memphis</a>
+  <a               data-target="trending" onclick="navTo('trending');     setNavActive(this)">Turbo Phonk</a>
+  <a               data-target="new-releases" onclick="navTo('new-releases'); setNavActive(this)">Slowed + Reverb</a>
+  <a               data-target="top-rated"    onclick="navTo('top-rated');    setNavActive(this)">Playlists</a>
 </div>
 
-<div class="page-body">
-  <main>
+<!-- PAGE -->
+<div class="page" id="top">
 
-    <!-- TRENDING SECTION -->
-    <div class="section" id="section-trending" data-tags="trending drift">
-      <div class="section-header">
-        <div class="section-title"><span class="fire">🔥</span> Trending Now</div>
-        <a class="section-see-all" onclick="filterSection('trending')">See All</a>
-      </div>
-      <div class="video-grid">
-
-        <a class="card" href="YOUR_LINK_HERE" target="_blank">
-          <div class="thumb-wrap">
-            <img src="https://i.ytimg.com/vi/3CvYqNxL1f4/hqdefault.jpg" alt="Track 1" onerror="this.src='https://placehold.co/320x180/111/333?text=PHONK'">
-            <div class="play-overlay"><div class="play-btn">▶</div></div>
-            <div class="hd-badge">FLAC</div>
-            <div class="duration">3:47</div>
-          </div>
-          <div class="card-info">
-            <div class="card-title">PHONK DRIFT — Night Highway Vol.3</div>
-            <div class="card-meta"><span class="card-channel">Drift Kings</span><span class="card-dot">•</span><span class="card-views">2.4M plays</span><span class="card-dot">•</span><span class="card-time">2 days ago</span></div>
-            <div class="rating-bar"><div class="rating-fill" style="width:94%"></div></div>
-          </div>
-        </a>
-
-        <a class="card" href="YOUR_LINK_HERE" target="_blank">
-          <div class="thumb-wrap">
-            <img src="https://i.ytimg.com/vi/Wch3gJG2GJ4/hqdefault.jpg" alt="Track 2" onerror="this.src='https://placehold.co/320x180/111/333?text=PHONK'">
-            <div class="play-overlay"><div class="play-btn">▶</div></div>
-            <div class="hd-badge">HD</div>
-            <div class="duration">4:12</div>
-          </div>
-          <div class="card-info">
-            <div class="card-title">ВЛАСТЕЛИН — Russian Phonk Aggressive Mix</div>
-            <div class="card-meta"><span class="card-channel">Russian Phonk HQ</span><span class="card-dot">•</span><span class="card-views">1.8M plays</span><span class="card-dot">•</span><span class="card-time">4 days ago</span></div>
-            <div class="rating-bar"><div class="rating-fill" style="width:89%"></div></div>
-          </div>
-        </a>
-
-        <a class="card" href="YOUR_LINK_HERE" target="_blank">
-          <div class="thumb-wrap">
-            <img src="https://i.ytimg.com/vi/VXGl7Ho4d4s/hqdefault.jpg" alt="Track 3" onerror="this.src='https://placehold.co/320x180/111/333?text=PHONK'">
-            <div class="play-overlay"><div class="play-btn">▶</div></div>
-            <div class="hd-badge">FLAC</div>
-            <div class="duration">2:58</div>
-          </div>
-          <div class="card-info">
-            <div class="card-title">PHONK COWBOY — Dark Western Vibes</div>
-            <div class="card-meta"><span class="card-channel">NightPhonk</span><span class="card-dot">•</span><span class="card-views">980K plays</span><span class="card-dot">•</span><span class="card-time">1 week ago</span></div>
-            <div class="rating-bar"><div class="rating-fill" style="width:85%"></div></div>
-          </div>
-        </a>
-
-        <a class="card" href="YOUR_LINK_HERE" target="_blank">
-          <div class="thumb-wrap">
-            <img src="https://i.ytimg.com/vi/FmJB3t-GznU/hqdefault.jpg" alt="Track 4" onerror="this.src='https://placehold.co/320x180/111/333?text=PHONK'">
-            <div class="play-overlay"><div class="play-btn">▶</div></div>
-            <div class="hd-badge">HD</div>
-            <div class="duration">3:30</div>
-          </div>
-          <div class="card-info">
-            <div class="card-title">FREAK — Sped Up Ultra Bass Mix</div>
-            <div class="card-meta"><span class="card-channel">Freaks Phonk</span><span class="card-dot">•</span><span class="card-views">3.1M plays</span><span class="card-dot">•</span><span class="card-time">3 days ago</span></div>
-            <div class="rating-bar"><div class="rating-fill" style="width:97%"></div></div>
-          </div>
-        </a>
-
-      </div>
+  <div class="welcome-bar" id="welcome-bar">
+    <div>
+      <h2>Welcome to <span>Phonkhub</span></h2>
+      <p>The internet's biggest collection of underground phonk music. Free forever.</p>
     </div>
-
-    <!-- NEW RELEASES SECTION -->
-    <div class="section" id="section-new" data-tags="new brazilian lofi">
-      <div class="section-header">
-        <div class="section-title">🆕 New Releases</div>
-        <a class="section-see-all" onclick="filterSection('new')">See All</a>
-      </div>
-      <div class="video-grid">
-
-        <a class="card" href="YOUR_LINK_HERE" target="_blank">
-          <div class="thumb-wrap">
-            <img src="https://i.ytimg.com/vi/gPBZSXVVBSs/hqdefault.jpg" alt="New 1" onerror="this.src='https://placehold.co/320x180/111/333?text=PHONK'">
-            <div class="play-overlay"><div class="play-btn">▶</div></div>
-            <div class="hd-badge">NEW</div>
-            <div class="duration">3:05</div>
-          </div>
-          <div class="card-info">
-            <div class="card-title">BAILE FUNK PHONK — São Paulo Streets</div>
-            <div class="card-meta"><span class="card-channel">BrazilPhonk</span><span class="card-dot">•</span><span class="card-views">120K plays</span><span class="card-dot">•</span><span class="card-time">5 hours ago</span></div>
-            <div class="rating-bar"><div class="rating-fill" style="width:78%"></div></div>
-          </div>
-        </a>
-
-        <a class="card" href="YOUR_LINK_HERE" target="_blank">
-          <div class="thumb-wrap">
-            <img src="https://i.ytimg.com/vi/Nj2U6rhnucI/hqdefault.jpg" alt="New 2" onerror="this.src='https://placehold.co/320x180/111/333?text=PHONK'">
-            <div class="play-overlay"><div class="play-btn">▶</div></div>
-            <div class="hd-badge">FLAC</div>
-            <div class="duration">4:55</div>
-          </div>
-          <div class="card-info">
-            <div class="card-title">SHADOW DRIFT — Midnight Run Extended</div>
-            <div class="card-meta"><span class="card-channel">Drift Kings</span><span class="card-dot">•</span><span class="card-views">45K plays</span><span class="card-dot">•</span><span class="card-time">12 hours ago</span></div>
-            <div class="rating-bar"><div class="rating-fill" style="width:82%"></div></div>
-          </div>
-        </a>
-
-        <a class="card" href="YOUR_LINK_HERE" target="_blank">
-          <div class="thumb-wrap">
-            <img src="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg" alt="New 3" onerror="this.src='https://placehold.co/320x180/111/333?text=PHONK'">
-            <div class="play-overlay"><div class="play-btn">▶</div></div>
-            <div class="hd-badge">HD</div>
-            <div class="duration">2:33</div>
-          </div>
-          <div class="card-info">
-            <div class="card-title">LO-FI PHONK — Study Session Vol.7</div>
-            <div class="card-meta"><span class="card-channel">LoFiPhonk</span><span class="card-dot">•</span><span class="card-views">8K plays</span><span class="card-dot">•</span><span class="card-time">1 hour ago</span></div>
-            <div class="rating-bar"><div class="rating-fill" style="width:70%"></div></div>
-          </div>
-        </a>
-
-        <a class="card" href="YOUR_LINK_HERE" target="_blank">
-          <div class="thumb-wrap">
-            <img src="https://i.ytimg.com/vi/Qm2fDCvAmZU/hqdefault.jpg" alt="New 4" onerror="this.src='https://placehold.co/320x180/111/333?text=PHONK'">
-            <div class="play-overlay"><div class="play-btn">▶</div></div>
-            <div class="hd-badge">NEW</div>
-            <div class="duration">3:18</div>
-          </div>
-          <div class="card-info">
-            <div class="card-title">PHONK MAFIA — Underground Trap Banger</div>
-            <div class="card-meta"><span class="card-channel">Freaks Phonk</span><span class="card-dot">•</span><span class="card-views">22K plays</span><span class="card-dot">•</span><span class="card-time">3 hours ago</span></div>
-            <div class="rating-bar"><div class="rating-fill" style="width:75%"></div></div>
-          </div>
-        </a>
-
-      </div>
-    </div>
-
-    <!-- TOP RATED SECTION -->
-    <div class="section" id="section-top" data-tags="top dark russian">
-      <div class="section-header">
-        <div class="section-title">⭐ Top Rated</div>
-        <a class="section-see-all" onclick="filterSection('top')">See All</a>
-      </div>
-      <div class="video-grid">
-
-        <a class="card" href="YOUR_LINK_HERE" target="_blank">
-          <div class="thumb-wrap">
-            <img src="https://i.ytimg.com/vi/lTRiuFIWV54/hqdefault.jpg" alt="Top 1" onerror="this.src='https://placehold.co/320x180/111/333?text=PHONK'">
-            <div class="play-overlay"><div class="play-btn">▶</div></div>
-            <div class="hd-badge">FLAC</div>
-            <div class="duration">5:02</div>
-          </div>
-          <div class="card-info">
-            <div class="card-title">DARK PHONK COMPILATION — 1 Hour Mix</div>
-            <div class="card-meta"><span class="card-channel">NightPhonk</span><span class="card-dot">•</span><span class="card-views">12.7M plays</span><span class="card-dot">•</span><span class="card-time">6 months ago</span></div>
-            <div class="rating-bar"><div class="rating-fill" style="width:99%"></div></div>
-          </div>
-        </a>
-
-        <a class="card" href="YOUR_LINK_HERE" target="_blank">
-          <div class="thumb-wrap">
-            <img src="https://i.ytimg.com/vi/7NOSDKb0HlU/hqdefault.jpg" alt="Top 2" onerror="this.src='https://placehold.co/320x180/111/333?text=PHONK'">
-            <div class="play-overlay"><div class="play-btn">▶</div></div>
-            <div class="hd-badge">HD</div>
-            <div class="duration">4:20</div>
-          </div>
-          <div class="card-info">
-            <div class="card-title">MORTEM — The Ultimate Phonk Anthem</div>
-            <div class="card-meta"><span class="card-channel">Russian Phonk HQ</span><span class="card-dot">•</span><span class="card-views">8.3M plays</span><span class="card-dot">•</span><span class="card-time">8 months ago</span></div>
-            <div class="rating-bar"><div class="rating-fill" style="width:98%"></div></div>
-          </div>
-        </a>
-
-        <a class="card" href="YOUR_LINK_HERE" target="_blank">
-          <div class="thumb-wrap">
-            <img src="https://i.ytimg.com/vi/Y5IIXUHGqcM/hqdefault.jpg" alt="Top 3" onerror="this.src='https://placehold.co/320x180/111/333?text=PHONK'">
-            <div class="play-overlay"><div class="play-btn">▶</div></div>
-            <div class="hd-badge">FLAC</div>
-            <div class="duration">3:44</div>
-          </div>
-          <div class="card-info">
-            <div class="card-title">FREEFALL — Drift Phonk Classic</div>
-            <div class="card-meta"><span class="card-channel">Drift Kings</span><span class="card-dot">•</span><span class="card-views">5.5M plays</span><span class="card-dot">•</span><span class="card-time">1 year ago</span></div>
-            <div class="rating-bar"><div class="rating-fill" style="width:96%"></div></div>
-          </div>
-        </a>
-
-        <a class="card" href="YOUR_LINK_HERE" target="_blank">
-          <div class="thumb-wrap">
-            <img src="https://i.ytimg.com/vi/Ud73fm4Uoq0/hqdefault.jpg" alt="Top 4" onerror="this.src='https://placehold.co/320x180/111/333?text=PHONK'">
-            <div class="play-overlay"><div class="play-btn">▶</div></div>
-            <div class="hd-badge">HD</div>
-            <div class="duration">2:59</div>
-          </div>
-          <div class="card-info">
-            <div class="card-title">PHONK FREAK — Original Hit</div>
-            <div class="card-meta"><span class="card-channel">Freaks Phonk</span><span class="card-dot">•</span><span class="card-views">21.4M plays</span><span class="card-dot">•</span><span class="card-time">2 years ago</span></div>
-            <div class="rating-bar"><div class="rating-fill" style="width:100%"></div></div>
-          </div>
-        </a>
-
-      </div>
-    </div>
-
-    <div class="no-results" id="no-results">No tracks found. Try a different search or category.</div>
-  </main>
-
-  <!-- RIGHT SIDEBAR -->
-  <aside class="right-sidebar">
-    <div class="rs-widget">
-      <div class="rs-title">Top 10 This Week</div>
-      <div class="top-item"><span class="top-num">1</span> PHONK FREAK — Original Hit</div>
-      <div class="top-item"><span class="top-num">2</span> MORTEM — The Anthem</div>
-      <div class="top-item"><span class="top-num">3</span> FREEFALL — Classic</div>
-      <div class="top-item"><span class="top-num">4</span> DARK PHONK 1HR Mix</div>
-      <div class="top-item"><span class="top-num">5</span> NIGHT HIGHWAY Vol.3</div>
-      <div class="top-item"><span class="top-num">6</span> ВЛАСТЕЛИН Mix</div>
-      <div class="top-item"><span class="top-num">7</span> PHONK COWBOY</div>
-      <div class="top-item"><span class="top-num">8</span> FREAK Sped Up</div>
-      <div class="top-item"><span class="top-num">9</span> BAILE FUNK SP</div>
-      <div class="top-item"><span class="top-num">10</span> SHADOW DRIFT Ext.</div>
-    </div>
-    <div class="rs-widget">
-      <div class="rs-title">Popular Tags</div>
-      <div class="tag-cloud">
-        <span class="tag" onclick="filterSection('drift')">#drift</span>
-        <span class="tag" onclick="filterSection('russian')">#russian</span>
-        <span class="tag" onclick="filterSection('dark')">#dark</span>
-        <span class="tag" onclick="filterSection('brazilian')">#baile</span>
-        <span class="tag" onclick="filterSection('lofi')">#lofi</span>
-        <span class="tag">#sped-up</span>
-        <span class="tag">#trap</span>
-        <span class="tag">#bass</span>
-        <span class="tag">#flac</span>
-        <span class="tag">#mix</span>
-      </div>
-    </div>
-    <div class="rs-widget">
-      <div class="rs-title">Upload Your Track</div>
-      <p style="font-size:12px;color:#777;margin-bottom:10px;">Share your phonk with millions of listeners.</p>
-      <button class="modal-submit" style="font-size:13px;padding:9px" onclick="openModal('upload')">⬆️ Upload Now</button>
-    </div>
-  </aside>
-</div>
-
-<footer>
-  <div class="footer-logo">Phonk<span class="hub">hub</span></div>
-  <div class="footer-links">
-    <a onclick="filterSection('home')">Home</a>
-    <a onclick="filterSection('trending')">Trending</a>
-    <a onclick="filterSection('new')">New Releases</a>
-    <a onclick="filterSection('top')">Top Rated</a>
-    <a onclick="showPopup('About Phonkhub: The #1 platform for phonk music streaming.')">About</a>
-    <a onclick="showPopup('Contact us at contact@phonkhub.com')">Contact</a>
-    <a onclick="showPopup('Terms of Service: By using Phonkhub you agree to our terms.')">Terms</a>
-    <a onclick="showPopup('DMCA: Report copyright infringement at dmca@phonkhub.com')">DMCA</a>
-    <a onclick="showPopup('Privacy Policy: We respect your data.')">Privacy</a>
+    <a class="wb-btn" onclick="navTo('trending')">&#9654; Start Listening</a>
   </div>
-  <div class="footer-copy">© 2025 Phonkhub. All rights reserved. Phonk music hub.</div>
+
+  <!-- TRENDING -->
+  <div class="section" id="trending">
+    <div class="section-head">
+      <div class="section-title">🔥 Trending</div>
+      <a class="see-all" onclick="navTo('trending'); setNavActive(document.querySelector('.cat-nav a[data-target=trending]'))">View All ›</a>
+    </div>
+    <div class="grid" id="grid-trending">
+
+      <a class="card" href="https://www.youtube.com/watch?v=G8yr82oFf8g&list=RDG8yr82oFf8g&start_radio=1" target="_blank"
+         data-title="N Word Phonk" data-artist="Sigeon Pex Lover">
+        <div class="thumb">
+          <img src="https://tse3.mm.bing.net/th/id/OIP.PBs6ftFwVYducp80i1ChUgHaHa?rs=1&pid=ImgDetMain&o=7&rm=3" alt="">
+          <div class="badge">4K UHD</div><div class="dur">3:14</div>
+          <div class="thumb-progress"><div class="thumb-progress-fill" style="width:0%"></div></div>
+          <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">N Word Phonk</div>
+          <div class="card-channel">Sigeon Pex Lover</div>
+          <div class="card-stats"><span>5.2M views</span><span>2 days ago</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="https://www.youtube.com/watch?v=BtZksmrqX6c" target="_blank"
+         data-title="Mommy Phonk" data-artist="Men Kisser">
+        <div class="thumb">
+          <img src="https://tse2.mm.bing.net/th/id/OIP.6E4v_uwPdFkMpxFOApEkLQHaGn?rs=1&pid=ImgDetMain&o=7&rm=3" alt="">
+          <div class="badge">HD</div><div class="dur">2:58</div>
+          <div class="thumb-progress"><div class="thumb-progress-fill" style="width:0%"></div></div>
+          <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Mommy Phonk</div>
+          <div class="card-channel">Men Kisser</div>
+          <div class="card-stats"><span>7.4M views</span><span>5 days ago</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="https://music.apple.com/ru/album/mango-phonk-single/1780817139" target="_blank"
+         data-title="Neon Ride" data-artist="LXST CXNTURY">
+        <div class="thumb">
+          <img src="https://us-tuna-sounds-images.voicemod.net/4bc46cec-36ba-4e4d-a0fa-8a9c8389f3ea-1721996484833.png" alt="">
+          <div class="dur">2:58</div>
+          <div class="thumb-progress"><div class="thumb-progress-fill" style="width:0%"></div></div>
+          <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Neon N***** Ride</div>
+          <div class="card-channel">LXST CXNTURY</div>
+          <div class="card-stats"><span>3.8M views</span><span>4 days ago</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Dark Emo Dih" data-artist="KSLV Noh">
+        <div class="thumb">
+          <img src="https://i.ytimg.com/vi/Sh1zT2YDPOk/maxresdefault.jpg" alt="">
+          <div class="badge">HD</div><div class="dur">4:02</div>
+          <div class="thumb-progress"><div class="thumb-progress-fill" style="width:0%"></div></div>
+          <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Dark Emo Dih</div>
+          <div class="card-channel">KSLV Noh</div>
+          <div class="card-stats"><span>2.1M views</span><span>1 week ago</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Soggy Dih" data-artist="Night Engine">
+        <div class="thumb">
+          <img src="https://tse4.mm.bing.net/th/id/OIP.zboD8zbAe6BsB8asKltAMQHaEK?rs=1&pid=ImgDetMain&o=7&rm=3" alt="">
+          <div class="badge">UHD</div><div class="dur">3:33</div>
+          <div class="thumb-progress"><div class="thumb-progress-fill" style="width:0%"></div></div>
+          <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Soggy Dih</div>
+          <div class="card-channel">Night Engine</div>
+          <div class="card-stats"><span>1.6M views</span><span>3 days ago</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Dark Daddy Phonk" data-artist="PHARAOH">
+        <div class="thumb">
+          <img src="https://tse3.mm.bing.net/th/id/OIP.P_QVfEh74AEdPfpHg-xjAAHaHa?rs=1&pid=ImgDetMain&o=7&rm=3" alt="">
+          <div class="dur">4:20</div>
+          <div class="thumb-progress"><div class="thumb-progress-fill" style="width:0%"></div></div>
+          <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Dark Daddy Phonk</div>
+          <div class="card-channel">PHARAOH</div>
+          <div class="card-stats"><span>920K views</span><span>6 days ago</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Drift Mode" data-artist="KORDHELL">
+        <div class="thumb">
+          <img src="https://images.unsplash.com/photo-1519996529931-28324d5a630e?w=400&q=80" alt="">
+          <div class="badge">HD</div><div class="dur">3:44</div>
+          <div class="thumb-progress"><div class="thumb-progress-fill" style="width:0%"></div></div>
+          <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Drift Mode</div>
+          <div class="card-channel">KORDHELL</div>
+          <div class="card-stats"><span>18M views</span><span>6 months ago</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Murder In My Mind" data-artist="KORDHELL">
+        <div class="thumb">
+          <img src="https://images.unsplash.com/photo-1506157786151-b8491531f063?w=400&q=80" alt="">
+          <div class="badge">HD</div><div class="dur">2:29</div>
+          <div class="thumb-progress"><div class="thumb-progress-fill" style="width:0%"></div></div>
+          <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Murder In My Mind</div>
+          <div class="card-channel">KORDHELL</div>
+          <div class="card-stats"><span>24M views</span><span>1 year ago</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Ghost Rider Phonk" data-artist="Soudiere">
+        <div class="thumb">
+          <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=80" alt="">
+          <div class="dur">3:12</div>
+          <div class="thumb-progress"><div class="thumb-progress-fill" style="width:0%"></div></div>
+          <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Ghost Rider Phonk</div>
+          <div class="card-channel">Soudiere</div>
+          <div class="card-stats"><span>11M views</span><span>8 months ago</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Late Night Drive Extended" data-artist="night lovell">
+        <div class="thumb">
+          <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&q=80" alt="">
+          <div class="badge">HD</div><div class="dur">4:08</div>
+          <div class="thumb-progress"><div class="thumb-progress-fill" style="width:0%"></div></div>
+          <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Late Night Drive (Extended)</div>
+          <div class="card-channel">night lovell</div>
+          <div class="card-stats"><span>9M views</span><span>10 months ago</span></div>
+        </div>
+      </a>
+
+      <div class="no-cards-msg" id="no-trending">😔 No results found</div>
+    </div>
+  </div>
+
+  <!-- NEW RELEASES -->
+  <div class="section" id="new-releases">
+    <div class="section-head">
+      <div class="section-title">🆕 New Releases</div>
+      <a class="see-all" onclick="navTo('new-releases'); setNavActive(document.querySelector('.cat-nav a[data-target=new-releases]'))">View All ›</a>
+    </div>
+    <div class="grid" id="grid-new">
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Midnight Engine" data-artist="Ghost Rider">
+        <div class="thumb">
+          <img src="https://images.unsplash.com/photo-1507874457470-272b3c8d8ee2?w=400&q=80" alt="">
+          <div class="badge">HD</div><div class="dur">3:29</div>
+          <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Midnight Engine</div>
+          <div class="card-channel">Ghost Rider</div>
+          <div class="card-stats"><span>44K views</span><span>1 hour ago</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Slow Burn" data-artist="Phonk Killer">
+        <div class="thumb">
+          <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&q=80" alt="">
+          <div class="dur">2:47</div>
+          <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Slow Burn</div>
+          <div class="card-channel">Phonk Killer</div>
+          <div class="card-stats"><span>12K views</span><span>3 hours ago</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Late Night Drive" data-artist="Øneheart">
+        <div class="thumb">
+          <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&q=80" alt="">
+          <div class="badge">HD</div><div class="dur">3:51</div>
+          <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Late Night Drive</div>
+          <div class="card-channel">Øneheart</div>
+          <div class="card-stats"><span>8K views</span><span>5 hours ago</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Deep Drift" data-artist="RXDXVIL">
+        <div class="thumb">
+          <img src="https://images.unsplash.com/photo-1494232410401-ad00d5433cfa?w=400&q=80" alt="">
+          <div class="dur">4:11</div>
+          <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Deep Drift</div>
+          <div class="card-channel">RXDXVIL</div>
+          <div class="card-stats"><span>31K views</span><span>6 hours ago</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Underground Hits Vol 3" data-artist="Kordhell">
+        <div class="thumb">
+          <img src="https://images.unsplash.com/photo-1492724441997-5dc865305da7?w=400&q=80" alt="">
+          <div class="badge">HD</div><div class="dur">2:33</div>
+          <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Underground Hits Vol. 3</div>
+          <div class="card-channel">Kordhell</div>
+          <div class="card-stats"><span>5K views</span><span>8 hours ago</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Drift Mode Activated" data-artist="Tveth">
+        <div class="thumb">
+          <img src="https://images.unsplash.com/photo-1519996529931-28324d5a630e?w=400&q=80" alt="">
+          <div class="dur">3:07</div>
+          <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Drift Mode Activated</div>
+          <div class="card-channel">Tveth</div>
+          <div class="card-stats"><span>2K views</span><span>10 hours ago</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Shadow Bass" data-artist="Night Engine">
+        <div class="thumb">
+          <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&q=80" alt="">
+          <div class="badge">HD</div><div class="dur">3:55</div>
+          <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Shadow Bass</div>
+          <div class="card-channel">Night Engine</div>
+          <div class="card-stats"><span>890K views</span><span>2 weeks ago</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Dark Memphis" data-artist="KSLV Noh">
+        <div class="thumb">
+          <img src="https://images.unsplash.com/photo-1511376777868-611b54f68947?w=400&q=80" alt="">
+          <div class="dur">4:02</div>
+          <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Dark Memphis</div>
+          <div class="card-channel">KSLV Noh</div>
+          <div class="card-stats"><span>2.1M views</span><span>1 week ago</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Tokyo Drift Phonk" data-artist="DJ Nightfall">
+        <div class="thumb">
+          <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&q=80" alt="">
+          <div class="badge">HD</div><div class="dur">3:14</div>
+          <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Tokyo Drift Phonk</div>
+          <div class="card-channel">DJ Nightfall</div>
+          <div class="card-stats"><span>5.2M views</span><span>2 days ago</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Neon Ride" data-artist="LXST CXNTURY">
+        <div class="thumb">
+          <img src="https://images.unsplash.com/photo-1497032205916-ac775f0649ae?w=400&q=80" alt="">
+          <div class="dur">2:58</div>
+          <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Neon Ride</div>
+          <div class="card-channel">LXST CXNTURY</div>
+          <div class="card-stats"><span>3.8M views</span><span>4 days ago</span></div>
+        </div>
+      </a>
+
+      <div class="no-cards-msg" id="no-new">😔 No results found</div>
+    </div>
+  </div>
+
+  <!-- TOP RATED -->
+  <div class="section" id="top-rated">
+    <div class="section-head">
+      <div class="section-title">⭐ Top Rated</div>
+      <a class="see-all" onclick="navTo('top-rated'); setNavActive(document.querySelector('.cat-nav a[data-target=top-rated]'))">View All ›</a>
+    </div>
+    <div class="grid" id="grid-top">
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Drift Mode" data-artist="KORDHELL">
+        <div class="thumb">
+          <img src="https://images.unsplash.com/photo-1519996529931-28324d5a630e?w=400&q=80" alt="">
+          <div class="badge">HD</div><div class="dur">3:44</div>
+          <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Drift Mode</div>
+          <div class="card-channel">KORDHELL</div>
+          <div class="card-stats"><span>18M views</span><span>6 months ago</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Murder In My Mind" data-artist="KORDHELL">
+        <div class="thumb">
+          <img src="https://images.unsplash.com/photo-1506157786151-b8491531f063?w=400&q=80" alt="">
+          <div class="badge">HD</div><div class="dur">2:29</div>
+          <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Murder In My Mind</div>
+          <div class="card-channel">KORDHELL</div>
+          <div class="card-stats"><span>24M views</span><span>1 year ago</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Ghost Rider Phonk" data-artist="Soudiere">
+        <div class="thumb">
+          <img src="https://images.unsplash.com/photo-1492724441997-5dc865305da7?w=400&q=80" alt="">
+          <div class="dur">3:12</div>
+          <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Ghost Rider Phonk</div>
+          <div class="card-channel">Soudiere</div>
+          <div class="card-stats"><span>11M views</span><span>8 months ago</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Late Night Drive Extended" data-artist="night lovell">
+        <div class="thumb">
+          <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&q=80" alt="">
+          <div class="badge">HD</div><div class="dur">4:08</div>
+          <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Late Night Drive (Extended)</div>
+          <div class="card-channel">night lovell</div>
+          <div class="card-stats"><span>9M views</span><span>10 months ago</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Street Ghosts" data-artist="DVRST">
+        <div class="thumb">
+          <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=80" alt="">
+          <div class="badge">HD</div><div class="dur">3:33</div>
+          <div class="play-overlay"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">Street Ghosts</div>
+          <div class="card-channel">DVRST</div>
+          <div class="card-stats"><span>7.4M views</span><span>5 days ago</span></div>
+        </div>
+      </a>
+
+      <div class="no-cards-msg" id="no-top">😔 No results found</div>
+    </div>
+  </div>
+
+</div><!-- end .page -->
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-logo">Phonk<span>hub</span></div>
+  <div class="foot-links">
+    <a onclick="navTo('all'); window.scrollTo({top:0,behavior:'smooth'})">Home</a>
+    <a onclick="navTo('trending'); setNavActive(document.querySelector('.cat-nav a[data-target=trending]'))">Trending</a>
+    <a onclick="navTo('new-releases'); setNavActive(document.querySelector('.cat-nav a[data-target=new-releases]'))">New Releases</a>
+    <a onclick="navTo('top-rated'); setNavActive(document.querySelector('.cat-nav a[data-target=top-rated]'))">Top Rated</a>
+    <a onclick="om('m-upload')">Upload</a>
+    <a onclick="navTo('top-rated')">Playlists</a>
+    <a onclick="navTo('trending')">Artists</a>
+    <a onclick="alert('Phonkhub — the internet\'s biggest underground phonk platform 🔥')">About</a>
+    <a onclick="alert('Contact us: phonkhub@phonk.com')">Contact</a>
+    <a onclick="alert('Privacy Policy: We do not sell your data. We only sell phonk.')">Privacy</a>
+    <a onclick="alert('Terms: Only upload phonk. No garbage allowed.')">Terms</a>
+    <a onclick="alert('DMCA: Email phonkhub@phonk.com for takedown requests.')">DMCA</a>
+  </div>
+  <p>© 2026 Phonkhub — Built for phonk lovers</p>
 </footer>
 
-<!-- MODALS -->
-<div class="modal-overlay" id="modal-login">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('login')">✕</button>
-    <h2>Log In to <span>Phonk</span><span style="background:#ff9000;color:#000;padding:1px 7px;border-radius:4px;">hub</span></h2>
-    <p>Access your saved tracks, playlists and more.</p>
-    <input type="email" placeholder="Email address">
-    <input type="password" placeholder="Password">
-    <button class="modal-submit">Log In</button>
-    <div class="modal-switch">No account? <a onclick="closeModal('login');openModal('signup')">Sign Up</a></div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="modal-signup">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('signup')">✕</button>
-    <h2>Join <span>Phonk</span><span style="background:#ff9000;color:#000;padding:1px 7px;border-radius:4px;">hub</span></h2>
-    <p>Create your free account today.</p>
-    <input type="text" placeholder="Username">
-    <input type="email" placeholder="Email address">
-    <input type="password" placeholder="Password">
-    <button class="modal-submit">Create Account</button>
-    <div class="modal-switch">Already have an account? <a onclick="closeModal('signup');openModal('login')">Log In</a></div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="modal-upload">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('upload')">✕</button>
-    <h2>Upload to <span>Phonk</span><span style="background:#ff9000;color:#000;padding:1px 7px;border-radius:4px;">hub</span></h2>
-    <p>Share your phonk with the community.</p>
-    <input type="text" placeholder="Track title">
-    <input type="text" placeholder="Artist / Channel name">
-    <input type="text" placeholder="Track URL (YouTube, SoundCloud...)">
-    <input type="text" placeholder="Thumbnail image URL">
-    <button class="modal-submit">Submit Track</button>
-  </div>
-</div>
-
-<!-- INFO POPUP -->
-<div class="info-popup" id="info-popup">
-  <button onclick="document.getElementById('info-popup').classList.remove('show')">✕</button>
-  <span id="info-popup-text"></span>
-</div>
+</div><!-- ╚══ end #site-wrap ══╝ -->
 
 <script>
-  // ── SIDEBAR ──
-  function openSidebar()  { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').style.display='block'; }
-  function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').style.display='none'; }
-  function sidebarSearch(v) { /* could filter sidebar items */ }
+/* ═══════════════════════════════════════════════════════
+   VIDEO INTRO
+   - Autoplays muted (browser requirement for no gesture)
+   - Immediately tries to unmute — works if browser allows
+   - If still muted, shows a small "tap for sound" button
+   - Video cannot be paused
+   - On end: fades to black → video removed → site fades in
+═══════════════════════════════════════════════════════ */
+(function () {
+  const video = document.getElementById('intro-video');
+  const wrap = document.getElementById('intro-video-wrap');
+  const fadeout = document.getElementById('intro-fadeout');
+  const soundBtn = document.getElementById('sound-btn');
 
-  // ── MODALS ──
-  function openModal(id) { document.getElementById('modal-'+id).classList.add('open'); }
-  function closeModal(id){ document.getElementById('modal-'+id).classList.remove('open'); }
-  document.querySelectorAll('.modal-overlay').forEach(el=>el.addEventListener('click',e=>{ if(e.target===el) el.classList.remove('open'); }));
-  document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
+  // FORCE start state: paused + muted
+  video.pause();
+  video.muted = true;
+  video.currentTime = 0;
 
-  // ── POPUP ──
-  let popupTimer;
-  function showPopup(msg) {
-    clearTimeout(popupTimer);
-    const p = document.getElementById('info-popup');
-    document.getElementById('info-popup-text').textContent = msg;
-    p.classList.add('show');
-    popupTimer = setTimeout(()=>p.classList.remove('show'), 4000);
+  // Show click-to-start state
+  soundBtn.style.display = 'block';
+  soundBtn.textContent = "▶ Click to Start";
+
+  function startIntro() {
+    // enable sound
+    video.muted = false;
+    video.volume = 1;
+
+    // play video
+    video.play().catch(() => {});
+
+    // hide button
+    soundBtn.style.display = 'none';
+
+    // remove click listeners so it only triggers once
+    wrap.removeEventListener('click', startIntro);
+    soundBtn.removeEventListener('click', startIntro);
   }
 
-  // ── LANGUAGE ──
-  function toggleLang() { document.getElementById('lang-drop').classList.toggle('open'); }
-  function setLang(flag,code,lang) {
-    document.getElementById('lang-btn').textContent = flag+' '+code+' ▾';
-    document.documentElement.lang = lang;
+  // Start on ANY user click (video or button)
+  wrap.addEventListener('click', startIntro);
+  soundBtn.addEventListener('click', startIntro);
+
+  // Block pause hacks
+  video.addEventListener('pause', () => {
+    if (!video.dataset.done) video.play();
+  });
+
+  // End → fade → remove → show site
+  video.addEventListener('ended', () => {
+    video.dataset.done = "1";
+
+    fadeout.classList.add('active');
+
+    setTimeout(() => {
+      wrap.remove();
+      document.getElementById('site-wrap').classList.add('visible');
+    }, 900);
+  });
+
+  // fallback if video breaks
+  video.addEventListener('error', () => {
+    wrap.remove();
+    document.getElementById('site-wrap').classList.add('visible');
+  });
+})();
+
+/* ═══════════════════════════════════════════
+   MODALS
+═══════════════════════════════════════════ */
+function om(id) { document.getElementById(id).classList.add('open'); document.body.style.overflow = 'hidden'; }
+function cm(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow = ''; }
+function sm(a, b) { cm(a); setTimeout(() => om(b), 160); }
+
+document.querySelectorAll('.overlay').forEach(el => {
+  el.addEventListener('click', e => {
+    if (e.target === el) { el.classList.remove('open'); document.body.style.overflow = ''; }
+  });
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.overlay.open').forEach(el => { el.classList.remove('open'); document.body.style.overflow = ''; });
+    closeSidebar();
     document.getElementById('lang-drop').classList.remove('open');
-    showPopup('Language set to '+code);
   }
-  document.addEventListener('click',e=>{ if(!e.target.closest('.lang-wrap')) document.getElementById('lang-drop').classList.remove('open'); });
+});
 
-  // ── SECTION FILTER ──
-  const allSections = ['trending','new','top'];
-  function filterSection(key) {
-    // update nav tabs
-    document.querySelectorAll('.cat-tab').forEach(t=>{
-      t.classList.toggle('active', t.dataset.section === key);
+/* ═══════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════ */
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sb-overlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sb-overlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+function setSbActive(id) {
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+}
+
+/* Sidebar search — filters the sidebar channel list */
+function sidebarSearch(val) {
+  const q = val.toLowerCase().trim();
+  document.querySelectorAll('.sb-sub-item, .sb-channel').forEach(el => {
+    const text = el.textContent.toLowerCase();
+    el.style.display = (!q || text.includes(q)) ? '' : 'none';
+  });
+}
+
+/* ═══════════════════════════════════════════
+   LANGUAGE SELECTOR
+═══════════════════════════════════════════ */
+function toggleLang(e) {
+  e.stopPropagation();
+  document.getElementById('lang-drop').classList.toggle('open');
+}
+function setLang(code, name, htmlLang) {
+  document.getElementById('lang-label').textContent = code;
+  document.documentElement.lang = htmlLang;
+  document.getElementById('lang-drop').classList.remove('open');
+  document.querySelectorAll('.lang-opt').forEach(o => o.classList.remove('selected'));
+  event.target.closest('.lang-opt').classList.add('selected');
+  if (code !== 'EN') {
+    alert('Full ' + name + ' translation coming soon! 🌐\nSite language set to ' + name + '.');
+  }
+}
+document.addEventListener('click', () => {
+  document.getElementById('lang-drop').classList.remove('open');
+});
+
+/* ═══════════════════════════════════════════
+   NAVIGATION — show/hide sections
+═══════════════════════════════════════════ */
+const ALL_SECTIONS = ['trending', 'new-releases', 'top-rated'];
+
+function navTo(target) {
+  const welcome = document.getElementById('welcome-bar');
+  if (target === 'all') {
+    ALL_SECTIONS.forEach(id => { document.getElementById(id).style.display = 'block'; });
+    welcome.style.display = 'flex';
+    // Restore all cards
+    document.querySelectorAll('.card').forEach(c => c.style.display = 'block');
+    document.querySelectorAll('.no-cards-msg').forEach(m => m.style.display = 'none');
+    document.getElementById('si').value = '';
+    document.getElementById('sd').style.display = 'none';
+  } else {
+    welcome.style.display = 'none';
+    ALL_SECTIONS.forEach(id => {
+      document.getElementById(id).style.display = (id === target) ? 'block' : 'none';
     });
-    if(key==='home') {
-      allSections.forEach(id=>{ document.getElementById('section-'+id).style.display=''; });
-      document.getElementById('no-results').classList.remove('show');
-      return;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+function setNavActive(el) {
+  if (!el) return;
+  document.querySelectorAll('.cat-nav a').forEach(a => a.classList.remove('active'));
+  el.classList.add('active');
+}
+
+/* ═══════════════════════════════════════════
+   SEARCH — live filtering with dropdown
+═══════════════════════════════════════════ */
+// All cards data for search
+const CARD_DATA = [];
+document.querySelectorAll('.card').forEach(card => {
+  CARD_DATA.push({
+    title:  card.getAttribute('data-title') || '',
+    artist: card.getAttribute('data-artist') || '',
+    href:   card.getAttribute('href') || '#',
+    el:     card
+  });
+});
+
+function liveSearch(val) {
+  const q = val.toLowerCase().trim();
+  const sd = document.getElementById('sd');
+
+  if (!q) {
+    sd.style.display = 'none';
+    // If we were in search mode, restore everything
+    if (document.body.getAttribute('data-searching')) {
+      document.body.removeAttribute('data-searching');
+      navTo('all');
     }
-    let any = false;
-    document.querySelectorAll('.section').forEach(sec=>{
-      const tags = (sec.dataset.tags||'').split(' ');
-      const show = sec.id==='section-'+key || tags.includes(key);
-      sec.style.display = show ? '' : 'none';
-      if(show) any = true;
-    });
-    document.getElementById('no-results').classList.toggle('show', !any);
+    return;
   }
 
-  // ── LIVE SEARCH ──
-  const allCards = () => [...document.querySelectorAll('.card')];
-  function liveSearch(q) {
-    q = q.trim().toLowerCase();
-    const drop = document.getElementById('search-drop');
-    if(!q) { drop.classList.remove('open'); drop.innerHTML=''; allCards().forEach(c=>c.style.display=''); document.querySelectorAll('.section').forEach(s=>s.style.display=''); return; }
-    // filter cards
-    let results = [];
-    document.querySelectorAll('.section').forEach(s=>s.style.display='');
-    allCards().forEach(card=>{
-      const title = card.querySelector('.card-title')?.textContent.toLowerCase()||'';
-      const ch    = card.querySelector('.card-channel')?.textContent.toLowerCase()||'';
-      const match = title.includes(q)||ch.includes(q);
-      card.style.display = match ? '' : 'none';
-      if(match) results.push({ title: card.querySelector('.card-title')?.textContent, ch: card.querySelector('.card-channel')?.textContent, img: card.querySelector('img')?.src, href: card.href });
-    });
-    // dropdown
-    if(results.length===0) {
-      drop.innerHTML='<div class="search-no-results">No results for "'+q+'"</div>';
-    } else {
-      drop.innerHTML = results.slice(0,6).map(r=>`<div class="search-result-item" onclick="window.open('${r.href}','_blank');document.getElementById('search-drop').classList.remove('open')"><img src="${r.img}" alt=""><div><div class="sr-title">${r.title}</div><div class="sr-section">${r.ch}</div></div></div>`).join('');
-    }
-    drop.classList.add('open');
+  // Mark we're searching
+  document.body.setAttribute('data-searching', '1');
+
+  // Show all sections while searching
+  ALL_SECTIONS.forEach(id => { document.getElementById(id).style.display = 'block'; });
+  document.getElementById('welcome-bar').style.display = 'none';
+
+  // Filter cards
+  let matchCount = 0;
+  CARD_DATA.forEach(item => {
+    const match = item.title.toLowerCase().includes(q) || item.artist.toLowerCase().includes(q);
+    item.el.style.display = match ? 'block' : 'none';
+    if (match) matchCount++;
+  });
+
+  // Show/hide "no results" per section
+  ['trending','new-releases','top-rated'].forEach((id, i) => {
+    const ids = ['no-trending','no-new','no-top'];
+    const grid = document.getElementById('grid-' + (['trending','new','top'][i]));
+    const visible = grid ? [...grid.querySelectorAll('.card')].some(c => c.style.display !== 'none') : false;
+    const noMsg = document.getElementById(ids[i]);
+    if (noMsg) noMsg.style.display = visible ? 'none' : 'block';
+  });
+
+  // Build dropdown
+  const matches = CARD_DATA.filter(d =>
+    d.title.toLowerCase().includes(q) || d.artist.toLowerCase().includes(q)
+  ).slice(0, 8);
+
+  if (matches.length === 0) {
+    sd.innerHTML = '<div class="no-results">No tracks found for "' + escHtml(val) + '"</div>';
+  } else {
+    sd.innerHTML = matches.map(d => `
+      <div class="sd-item" onclick="window.open('${d.href}','_blank')">
+        <span>🎵</span>
+        <div class="sd-text">
+          <div class="sd-title">${escHtml(d.title)}</div>
+          <div class="sd-sub">${escHtml(d.artist)}</div>
+        </div>
+      </div>`).join('');
   }
-  function doSearch() {
-    const q = document.getElementById('search-input').value.trim();
-    if(q) liveSearch(q);
-  }
-  document.addEventListener('click',e=>{ if(!e.target.closest('.search-rel')) document.getElementById('search-drop').classList.remove('open'); });
+  sd.style.display = 'block';
+}
 
-  // ══════════════════════════════════════════════════════════
-  //           VIDEO INTRO JAVASCRIPT
-  // ══════════════════════════════════════════════════════════
-  (function() {
-    const overlay  = document.getElementById('intro-overlay');
-    const video    = document.getElementById('intro-video');
-    const fillBar  = document.getElementById('intro-progress-fill');
+function doSearch() {
+  const val = document.getElementById('si').value.trim();
+  if (val) liveSearch(val);
+}
 
-    // Prevent pausing by any means
-    video.addEventListener('pause', () => { video.play(); });
-    video.addEventListener('click', e => { e.preventDefault(); video.play(); });
-    video.addEventListener('contextmenu', e => e.preventDefault());
-    document.addEventListener('keydown', e => {
-      if(overlay.style.display==='none') return;
-      if(e.code==='Space' || e.code==='KeyK') { e.preventDefault(); video.play(); }
-    });
-
-    // Update progress bar
-    video.addEventListener('timeupdate', () => {
-      if(video.duration) fillBar.style.width = (video.currentTime / video.duration * 100) + '%';
-    });
-
-    // On video end — fade and remove
-    video.addEventListener('ended', () => {
-      overlay.classList.add('fade-out');
-      setTimeout(() => { overlay.style.display = 'none'; }, 850);
-    });
-
-    // Fallback: if video fails to load, skip intro gracefully
-    video.addEventListener('error', () => {
-      overlay.classList.add('fade-out');
-      setTimeout(() => { overlay.style.display = 'none'; }, 500);
-    });
-
-    // Autoplay guard — some browsers block autoplay even when muted
-    const playPromise = video.play();
-    if(playPromise !== undefined) {
-      playPromise.catch(() => {
-        // Autoplay blocked — add click-to-start
-        const msg = document.createElement('div');
-        msg.style.cssText='position:absolute;bottom:20px;left:50%;transform:translateX(-50%);background:#ff9000;color:#000;padding:8px 24px;border-radius:20px;font-weight:700;cursor:pointer;z-index:3;font-size:14px;';
-        msg.textContent='▶  Click to Play Intro';
-        overlay.appendChild(msg);
-        msg.addEventListener('click', () => { video.play(); msg.remove(); });
-      });
-    }
-  })();
-  // ══════════════════════════════════════════════════════════
-  //        END VIDEO INTRO JAVASCRIPT
-  // ══════════════════════════════════════════════════════════
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 </script>
 </body>
 </html>
