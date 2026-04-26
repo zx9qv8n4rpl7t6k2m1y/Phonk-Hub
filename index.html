@@ -1369,62 +1369,49 @@
 (function () {
   const video = document.getElementById('intro-video');
   const wrap = document.getElementById('intro-video-wrap');
-  const fadeout = document.getElementById('intro-fadeout');
   const soundBtn = document.getElementById('sound-btn');
+  const site = document.getElementById('site-wrap');
 
-  // FORCE start state: paused + muted
-  video.pause();
+  let started = false;
+
+  // initial state
   video.muted = true;
   video.currentTime = 0;
 
-  // Show click-to-start state
   soundBtn.style.display = 'block';
   soundBtn.textContent = "▶ Click to Start";
 
   function startIntro() {
-    // enable sound
+    if (started) return;
+    started = true;
+
     video.muted = false;
     video.volume = 1;
 
-    // play video
     video.play().catch(() => {});
 
-    // hide button
     soundBtn.style.display = 'none';
-
-    // remove click listeners so it only triggers once
-    wrap.removeEventListener('click', startIntro);
-    soundBtn.removeEventListener('click', startIntro);
   }
 
-  // Start on ANY user click (video or button)
   wrap.addEventListener('click', startIntro);
   soundBtn.addEventListener('click', startIntro);
 
-  // Block pause hacks
-  video.addEventListener('pause', () => {
-    if (!video.dataset.done) video.play();
-  });
+  // ❌ IMPORTANT: do NOT force replay on pause anymore
+  // (removed the pause event listener completely)
 
-  // End → fade → remove → show site
   video.addEventListener('ended', () => {
-    video.dataset.done = "1";
+    site.classList.add('visible'); // fade in site immediately
 
-    fadeout.classList.add('active');
-
-    setTimeout(() => {
-      wrap.remove();
-      document.getElementById('site-wrap').classList.add('visible');
-    }, 900);
+    // remove intro instantly (no long delay)
+    wrap.remove();
   });
 
-  // fallback if video breaks
   video.addEventListener('error', () => {
+    site.classList.add('visible');
     wrap.remove();
-    document.getElementById('site-wrap').classList.add('visible');
   });
 })();
-
+  
 /* ═══════════════════════════════════════════
    MODALS
 ═══════════════════════════════════════════ */
