@@ -709,7 +709,6 @@
 <div id="intro-video-wrap">
   <video id="intro-video"
     src="video.webm"
-    autoplay
     muted
     playsinline
     preload="auto"
@@ -1360,7 +1359,6 @@
 <script>
 /* ═══════════════════════════════════════════════════════
    VIDEO INTRO
-   - Autoplays muted (browser requirement for no gesture)
    - Immediately tries to unmute — works if browser allows
    - If still muted, shows a small "tap for sound" button
    - Video cannot be paused
@@ -1377,7 +1375,8 @@
   // initial state
   video.muted = true;
   video.currentTime = 0;
-
+  video.pause();
+  
   soundBtn.style.display = 'block';
   soundBtn.textContent = "▶ Click to Start";
 
