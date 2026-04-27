@@ -611,14 +611,11 @@
      After it ends → fade to black → site fades in.
 ═══════════════════════════════════════════════════ -->
 <div id="intro-video-wrap">
-  <video id="intro-video"
-    src="video.webm"
-    muted
-    playsinline
-    preload="auto"
-    webkit-playsinline
-    x5-playsinline
-  ></video>
+<video id="intro-video"
+  src="video.webm"
+  playsinline
+  preload="auto"
+></video>
   <div id="intro-vignette"></div>
   <div id="intro-fadeout"></div>
   <button id="sound-btn" onclick="unmuteVideo()">🔇 Tap for Sound</button>
@@ -990,75 +987,35 @@
   const video    = document.getElementById('intro-video');
   const wrap     = document.getElementById('intro-video-wrap');
   const fadeout  = document.getElementById('intro-fadeout');
-  const soundBtn = document.getElementById('sound-btn');
   const site     = document.getElementById('site-wrap');
+  const overlay  = document.getElementById('start-overlay');
 
-  // Start muted — required by browser autoplay policy
-  video.muted = true;
+  window.startIntro = function () {
+    overlay.remove();
 
-  // Try to play immediately
-  const p = video.play();
-  if (p !== undefined) {
-    p.then(() => {
-      // Playback started — try unmuting
-      video.muted = false;
-      video.volume = 1;
-      soundBtn.style.display = 'none';
-    }).catch(() => {
-      // Autoplay blocked — show muted + sound button
-      video.muted = true;
-      video.play().catch(() => {
-        // Total failure (e.g. file missing) — skip intro
-        revealSite();
-      });
-      soundBtn.style.display = 'block';
-    });
-  }
-
-  // Unmute button
-  function unmuteVideo() {
     video.muted = false;
     video.volume = 1;
-    soundBtn.style.display = 'none';
-  }
-  window.unmuteVideo = unmuteVideo;
-  soundBtn.addEventListener('click', unmuteVideo);
-  soundBtn.addEventListener('touchend', function(e) { e.preventDefault(); unmuteVideo(); });
 
-  // Block pause — resume immediately if paused
-  video.addEventListener('pause', () => {
-    if (!video.ended) video.play().catch(() => {});
-  });
+    video.play().catch(err => {
+      console.log("Play failed:", err);
+    });
+  };
 
-  // Block right-click on video
-  wrap.addEventListener('contextmenu', e => e.preventDefault());
-
-  // Block spacebar / K / P while video playing
-  function blockKeys(e) {
-    if (['Space','KeyK','KeyP'].includes(e.code)) e.preventDefault();
-  }
-  document.addEventListener('keydown', blockKeys);
-
-  // Video ended — fade out, reveal site, remove video
+  // When video ends
   video.addEventListener('ended', () => {
-    document.removeEventListener('keydown', blockKeys);
-    fadeout.classList.add('active');         // fade to black (0.85s)
-    site.classList.add('visible');           // site starts fading in simultaneously
+    fadeout.classList.add('active');
+    site.classList.add('visible');
+
     setTimeout(() => {
-      wrap.remove();                         // remove video from DOM entirely
+      wrap.remove();
     }, 1000);
   });
 
-  // Fallback: if video errors (missing file etc.)
+  // If video fails
   video.addEventListener('error', () => {
-    document.removeEventListener('keydown', blockKeys);
-    revealSite();
+    site.classList.add('visible');
     wrap.remove();
   });
-
-  function revealSite() {
-    site.classList.add('visible');
-  }
 })();
 
 /* ══════════════════════════════════════════════════════
