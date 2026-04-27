@@ -4,8 +4,14 @@
   <meta charset="UTF-8">
   <title>Phonkhub</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- ╔══════════════════════════════════════════════════════════╗
+       ║  FAVICON — JUST REPLACE THE href WITH YOUR FAVICON URL  ║
+       ╚══════════════════════════════════════════════════════════╝ -->
   <link rel="icon" type="image/png" href="https://i.postimg.cc/VN368rw6/favicon.png">
+
   <style>
+    /* ─────────────────── RESET & BASE ─────────────────── */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
     body {
@@ -17,10 +23,11 @@
     }
     a { text-decoration: none; color: inherit; }
 
+    /* Site starts invisible — fades in after video */
     #site-wrap { opacity: 0; transition: opacity 0.9s ease; }
     #site-wrap.visible { opacity: 1; }
 
-    /* ── INTRO VIDEO WRAP ── */
+    /* ── Fullscreen video wrapper ── */
     #intro-video-wrap {
       position: fixed; inset: 0;
       background: #000; z-index: 9999;
@@ -33,6 +40,7 @@
     #intro-video::-webkit-media-controls,
     #intro-video::-webkit-media-controls-enclosure { display: none !important; }
 
+    /* Fade-to-black layer */
     #intro-fadeout {
       position: absolute; inset: 0;
       background: #000; opacity: 0;
@@ -41,107 +49,126 @@
     }
     #intro-fadeout.active { opacity: 1; }
 
+    /* Cinematic vignette */
     #intro-vignette {
       position: absolute; inset: 0;
       background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.65) 100%);
       pointer-events: none;
     }
 
-    /* ══════════════════════════════════════
-       PLAY BUTTON SPLASH
-    ══════════════════════════════════════ */
-    #ph-play-splash {
+    /* Sound unmute button — only shows if browser blocked audio */
+    #sound-btn {
+      display: none;
       position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,0.95);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10;
-      cursor: pointer;
+      bottom: 24px; right: 24px;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid rgba(255,144,0,0.6);
+      color: #ff9000;
+      font-size: 12px; font-weight: bold;
+      letter-spacing: 1px; text-transform: uppercase;
+      padding: 8px 16px; border-radius: 2px;
+      cursor: pointer; z-index: 2;
+      transition: background 0.15s;
     }
-
-    #playBtn {
-      width: 95px;
-      height: 95px;
-      border-radius: 50%;
-      border: none;
-      background: linear-gradient(145deg, #ff9a1f, #ff7a00);
-      position: relative;
-      box-shadow: 0 0 25px rgba(255,140,0,0.6);
-      transition: transform 0.15s ease, box-shadow 0.2s ease;
-      cursor: pointer;
-    }
-    #ph-play-splash:hover #playBtn {
-      transform: scale(1.08);
-      box-shadow: 0 0 35px rgba(255,140,0,0.85);
-    }
-    #playBtn::before {
-      content: "";
-      position: absolute;
-      left: 38px;
-      top: 28px;
-      width: 0;
-      height: 0;
-      border-left: 22px solid white;
-      border-top: 14px solid transparent;
-      border-bottom: 14px solid transparent;
-    }
-
-    /* Hiding the splash */
-    #ph-play-splash.hiding {
-      animation: splashOut 0.5s ease forwards;
-      pointer-events: none;
-    }
-    @keyframes splashOut {
-      from { opacity: 1; }
-      to   { opacity: 0; }
-    }
+    #sound-btn:hover { background: rgba(255,144,0,0.15); }
 
     /* ─────────────────── SIDEBAR ─────────────────── */
     .sidebar-overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.7); z-index: 498;
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 498;
     }
     .sidebar-overlay.show { display: block; }
 
     .sidebar {
-      position: fixed; top: 0; left: -285px;
-      width: 285px; height: 100vh;
-      background: #0e0e0e; z-index: 499;
+      position: fixed;
+      top: 0;
+      left: -285px;
+      width: 285px;
+      height: 100vh;
+      background: #0e0e0e;
+      z-index: 499;
       transition: left 0.28s ease;
-      overflow-y: auto; overflow-x: hidden;
+      overflow-y: auto;
+      overflow-x: hidden;
       border-right: 1px solid #1f1f1f;
-      display: flex; flex-direction: column;
+      display: flex;
+      flex-direction: column;
     }
     .sidebar.open { left: 0; }
     .sidebar::-webkit-scrollbar { width: 4px; }
     .sidebar::-webkit-scrollbar-thumb { background: #333; }
 
     .sb-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 16px; background: #000;
-      border-bottom: 2px solid #ff9000; flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: #000;
+      border-bottom: 2px solid #ff9000;
+      flex-shrink: 0;
     }
-    .sb-logo { font-size: 22px; font-weight: 900; color: white; }
-    .sb-logo span { background: orange; color: black; padding: 2px 7px; border-radius: 4px; }
-    .sb-close { background: none; border: none; color: #888; font-size: 22px; cursor: pointer; line-height: 1; padding: 4px; }
+    .sb-logo {
+      font-size: 22px;
+      font-weight: 900;
+      color: white;
+    }
+    .sb-logo span {
+      background: orange;
+      color: black;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+    .sb-close {
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 22px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+    }
     .sb-close:hover { color: white; }
 
-    .sb-search { padding: 12px 14px; border-bottom: 1px solid #1a1a1a; }
+    .sb-search {
+      padding: 12px 14px;
+      border-bottom: 1px solid #1a1a1a;
+    }
     .sb-search input {
-      width: 100%; background: #1a1a1a; border: 1px solid #333;
-      border-radius: 2px; outline: none; color: #ddd; padding: 7px 10px; font-size: 12px;
+      width: 100%;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 2px;
+      outline: none;
+      color: #ddd;
+      padding: 7px 10px;
+      font-size: 12px;
     }
     .sb-search input::placeholder { color: #555; }
     .sb-search input:focus { border-color: #ff9000; }
 
-    .sb-section-label { padding: 10px 16px 6px; font-size: 10px; font-weight: 900; color: #555; text-transform: uppercase; letter-spacing: 1px; }
+    .sb-section-label {
+      padding: 10px 16px 6px;
+      font-size: 10px;
+      font-weight: 900;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
 
     .sb-item {
-      display: flex; align-items: center; gap: 12px; padding: 10px 16px;
-      cursor: pointer; color: #aaa; font-size: 13px; font-weight: bold;
-      transition: background 0.15s, color 0.15s; border-left: 3px solid transparent;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      cursor: pointer;
+      color: #aaa;
+      font-size: 13px;
+      font-weight: bold;
+      transition: background 0.15s, color 0.15s;
+      border-left: 3px solid transparent;
     }
     .sb-item:hover { background: #1a1a1a; color: #fff; }
     .sb-item.active { color: #ff9000; border-left-color: #ff9000; background: #141414; }
@@ -151,18 +178,37 @@
     .sb-divider { height: 1px; background: #1a1a1a; margin: 6px 0; }
 
     .sb-sub-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 8px 16px 8px 50px; cursor: pointer; color: #888; font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px 8px 50px;
+      cursor: pointer;
+      color: #888;
+      font-size: 12px;
       transition: background 0.15s, color 0.15s;
     }
     .sb-sub-item:hover { background: #1a1a1a; color: #ff9000; }
 
-    .sb-channel { display: flex; align-items: center; gap: 10px; padding: 8px 16px; cursor: pointer; transition: background 0.15s; }
+    .sb-channel {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
     .sb-channel:hover { background: #1a1a1a; }
     .sb-channel-av {
-      width: 32px; height: 32px; border-radius: 50%; background: #222;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px; flex-shrink: 0; border: 1px solid #333;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #222;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+      border: 1px solid #333;
     }
     .sb-channel-info { flex: 1; min-width: 0; }
     .sb-channel-name { font-size: 12px; font-weight: bold; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -171,30 +217,53 @@
     .sb-premium-box {
       margin: 12px 14px 16px;
       background: linear-gradient(135deg, #1a0d00, #0a0a0a);
-      border: 1px solid rgba(255,144,0,0.3); border-radius: 3px; padding: 14px; text-align: center;
+      border: 1px solid rgba(255,144,0,0.3);
+      border-radius: 3px;
+      padding: 14px;
+      text-align: center;
     }
     .sb-premium-box h4 { font-size: 13px; font-weight: 900; color: #fff; margin-bottom: 4px; }
     .sb-premium-box h4 span { color: #ff9000; }
     .sb-premium-box p { font-size: 11px; color: #666; margin-bottom: 10px; }
     .sb-premium-btn {
-      display: block; width: 100%; background: #ff9000; color: #000;
-      font-weight: 900; font-size: 12px; text-transform: uppercase;
-      padding: 8px; border: none; border-radius: 2px; cursor: pointer;
+      display: block;
+      width: 100%;
+      background: #ff9000;
+      color: #000;
+      font-weight: 900;
+      font-size: 12px;
+      text-transform: uppercase;
+      padding: 8px;
+      border: none;
+      border-radius: 2px;
+      cursor: pointer;
     }
     .sb-premium-btn:hover { background: #e08000; }
 
     /* ─────────────────── LANGUAGE DROPDOWN ─────────────────── */
     .lang-wrap { position: relative; }
     .lang-dropdown {
-      display: none; position: absolute; top: 100%; right: 0;
-      background: #1a1a1a; border: 1px solid #333;
-      border-top: 2px solid #ff9000; min-width: 160px; z-index: 400;
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-top: 2px solid #ff9000;
+      min-width: 160px;
+      z-index: 400;
       box-shadow: 0 4px 20px rgba(0,0,0,0.6);
     }
     .lang-dropdown.open { display: block; }
     .lang-opt {
-      padding: 9px 16px; cursor: pointer; font-size: 12px; color: #aaa;
-      display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #222;
+      padding: 9px 16px;
+      cursor: pointer;
+      font-size: 12px;
+      color: #aaa;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid #222;
     }
     .lang-opt:last-child { border: none; }
     .lang-opt:hover { background: #222; color: #ff9000; }
@@ -203,48 +272,115 @@
 
     /* ─────────────────── TOP STRIP ─────────────────── */
     .top-strip {
-      background: #000; height: 30px;
-      display: flex; align-items: center; justify-content: flex-end;
-      padding: 0 16px; gap: 20px; border-bottom: 1px solid #1a1a1a;
+      background: #000;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0 16px;
+      gap: 20px;
+      border-bottom: 1px solid #1a1a1a;
     }
     .top-strip a { color: #777; font-size: 11px; cursor: pointer; }
     .top-strip a:hover { color: #ff9000; }
 
     /* ─────────────────── HEADER ─────────────────── */
     header {
-      background: #000; height: 52px;
-      display: flex; align-items: center; padding: 0 12px; gap: 10px;
-      position: sticky; top: 0; z-index: 300; border-bottom: 2px solid #ff9000;
+      background: #000;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 300;
+      border-bottom: 2px solid #ff9000;
     }
-    .hamburger { display: flex; flex-direction: column; gap: 4px; cursor: pointer; padding: 7px 6px; flex-shrink: 0; border-radius: 2px; }
+
+    .hamburger {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      cursor: pointer;
+      padding: 7px 6px;
+      flex-shrink: 0;
+      border-radius: 2px;
+    }
     .hamburger span { display: block; width: 20px; height: 2px; background: #bbb; transition: background 0.15s; }
     .hamburger:hover span { background: #ff9000; }
 
-    .logo { font-size: 28px; font-weight: bold; color: white; white-space: nowrap; flex-shrink: 0; cursor: pointer; }
-    .logo span { background: orange; color: black; padding: 4px 8px; border-radius: 4px; }
+    /* LOGO — EXACT FROM YOUR CODE */
+    .logo {
+      font-size: 28px;
+      font-weight: bold;
+      color: white;
+      white-space: nowrap;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .logo span {
+      background: orange;
+      color: black;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
 
-    .search-form { flex: 1; display: flex; max-width: 580px; position: relative; }
+    /* SEARCH */
+    .search-form {
+      flex: 1;
+      display: flex;
+      max-width: 580px;
+      position: relative;
+    }
     .search-form input {
-      width: 100%; background: #2c2c2c; border: 1px solid #444; border-right: none;
-      border-radius: 2px 0 0 2px; outline: none; color: #ddd; padding: 8px 12px; font-size: 13px;
+      width: 100%;
+      background: #2c2c2c;
+      border: 1px solid #444;
+      border-right: none;
+      border-radius: 2px 0 0 2px;
+      outline: none;
+      color: #ddd;
+      padding: 8px 12px;
+      font-size: 13px;
     }
     .search-form input::placeholder { color: #666; }
     .search-form input:focus { border-color: #ff9000; }
     .search-form button {
-      background: #ff9000; border: none; border-radius: 0 2px 2px 0;
-      padding: 0 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      background: #ff9000;
+      border: none;
+      border-radius: 0 2px 2px 0;
+      padding: 0 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .search-form button svg { width: 18px; height: 18px; fill: #000; }
     .search-form button:hover { background: #e08000; }
 
+    /* Search dropdown */
     .search-drop {
-      display: none; position: absolute; top: 100%; left: 0; right: 42px;
-      background: #1a1a1a; border: 1px solid #444; border-top: 2px solid #ff9000;
-      z-index: 400; max-height: 320px; overflow-y: auto;
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 42px;
+      background: #1a1a1a;
+      border: 1px solid #444;
+      border-top: 2px solid #ff9000;
+      z-index: 400;
+      max-height: 320px;
+      overflow-y: auto;
     }
     .sd-item {
-      padding: 9px 14px; cursor: pointer; font-size: 12px; border-bottom: 1px solid #222;
-      display: flex; align-items: center; gap: 10px;
+      padding: 9px 14px;
+      cursor: pointer;
+      font-size: 12px;
+      border-bottom: 1px solid #222;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
     .sd-item:last-child { border: none; }
     .sd-item:hover { background: #222; color: #ff9000; }
@@ -252,10 +388,31 @@
     .sd-title { font-weight: bold; color: #ddd; }
     .sd-sub { font-size: 11px; color: #666; margin-top: 1px; }
     .sd-item:hover .sd-title { color: #ff9000; }
-    .no-results { padding: 14px; font-size: 12px; color: #666; text-align: center; }
+    .no-results {
+      padding: 14px;
+      font-size: 12px;
+      color: #666;
+      text-align: center;
+    }
 
-    .header-right { display: flex; align-items: center; gap: 6px; margin-left: auto; flex-shrink: 0; }
-    .h-btn { border: none; border-radius: 2px; padding: 6px 14px; font-size: 12px; font-weight: bold; cursor: pointer; text-transform: uppercase; white-space: nowrap; }
+    /* Header right */
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+    .h-btn {
+      border: none;
+      border-radius: 2px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
     .h-btn-ghost { background: transparent; color: #ccc; border: 1px solid #555; }
     .h-btn-ghost:hover { border-color: #ff9000; color: #ff9000; }
     .h-btn-orange { background: #ff9000; color: #000; }
@@ -265,77 +422,215 @@
 
     /* ─────────────────── CATEGORY NAV ─────────────────── */
     .cat-nav {
-      background: #282828; display: flex; overflow-x: auto; scrollbar-width: none;
-      border-bottom: 1px solid #333; position: sticky; top: 52px; z-index: 200;
+      background: #282828;
+      display: flex;
+      overflow-x: auto;
+      scrollbar-width: none;
+      border-bottom: 1px solid #333;
+      position: sticky;
+      top: 52px;
+      z-index: 200;
     }
     .cat-nav::-webkit-scrollbar { display: none; }
     .cat-nav a {
-      color: #bbb; font-size: 12px; font-weight: bold; text-transform: uppercase;
-      padding: 10px 14px; white-space: nowrap; border-bottom: 3px solid transparent;
-      display: block; letter-spacing: 0.3px; cursor: pointer;
+      color: #bbb;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      padding: 10px 14px;
+      white-space: nowrap;
+      border-bottom: 3px solid transparent;
+      display: block;
+      letter-spacing: 0.3px;
+      cursor: pointer;
     }
     .cat-nav a:hover { color: #fff; background: #333; }
     .cat-nav a.active { color: #ff9000; border-bottom-color: #ff9000; }
 
     /* ─────────────────── PAGE ─────────────────── */
-    .page { max-width: 1300px; margin: 0 auto; padding: 16px 12px; }
+    .page {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 16px 12px;
+    }
 
+    /* Welcome bar */
     .welcome-bar {
-      background: #000; border-left: 3px solid #ff9000; padding: 14px 20px;
-      display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px;
+      background: #000;
+      border-left: 3px solid #ff9000;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
     }
     .welcome-bar h2 { font-size: 16px; font-weight: 900; color: #fff; }
     .welcome-bar h2 span { color: #ff9000; }
     .welcome-bar p { font-size: 12px; color: #777; margin-top: 2px; }
     .wb-btn {
-      background: #ff9000; color: #000; font-weight: 900; font-size: 12px;
-      text-transform: uppercase; padding: 9px 20px; border-radius: 2px; white-space: nowrap; cursor: pointer; flex-shrink: 0;
+      background: #ff9000;
+      color: #000;
+      font-weight: 900;
+      font-size: 12px;
+      text-transform: uppercase;
+      padding: 9px 20px;
+      border-radius: 2px;
+      white-space: nowrap;
+      cursor: pointer;
+      flex-shrink: 0;
     }
     .wb-btn:hover { background: #e08000; }
 
     /* ─────────────────── SECTIONS ─────────────────── */
     .section { margin-bottom: 28px; }
-    .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #252525; padding-bottom: 8px; }
-    .section-title { font-size: 16px; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 10px; }
-    .section-title::before { content: ''; width: 3px; height: 18px; background: #ff9000; display: inline-block; border-radius: 1px; }
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #252525;
+      padding-bottom: 8px;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 900;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title::before {
+      content: '';
+      width: 3px;
+      height: 18px;
+      background: #ff9000;
+      display: inline-block;
+      border-radius: 1px;
+    }
     .see-all { color: #ff9000; font-size: 11px; font-weight: bold; text-transform: uppercase; cursor: pointer; letter-spacing: 0.4px; }
     .see-all:hover { text-decoration: underline; }
 
     /* ─────────────────── GRID ─────────────────── */
-    .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+    }
     @media (max-width: 1100px) { .grid { grid-template-columns: repeat(4,1fr); } }
     @media (max-width: 860px)  { .grid { grid-template-columns: repeat(3,1fr); } }
     @media (max-width: 560px)  { .grid { grid-template-columns: repeat(2,1fr); } }
 
     /* ─────────────────── CARD ─────────────────── */
-    .card { display: block; color: #ccc; cursor: pointer; }
+    .card {
+      display: block;
+      color: #ccc;
+      cursor: pointer;
+    }
     .card:hover .card-title { color: #ff9000; }
     .card:hover .thumb img { transform: scale(1.04); }
     .card:hover .play-overlay { opacity: 1; }
 
-    .thumb { position: relative; overflow: hidden; aspect-ratio: 16/9; background: #111; border-radius: 1px; }
-    .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
-    .thumb-progress { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: rgba(255,255,255,0.12); }
+    .thumb {
+      position: relative;
+      overflow: hidden;
+      aspect-ratio: 16/9;
+      background: #111;
+      border-radius: 1px;
+    }
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.3s;
+    }
+    .thumb-progress {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      background: rgba(255,255,255,0.12);
+    }
     .thumb-progress-fill { height: 100%; background: #ff9000; }
-    .dur { position: absolute; bottom: 6px; right: 6px; background: rgba(0,0,0,0.85); color: #fff; font-size: 11px; font-weight: bold; padding: 1px 5px; border-radius: 2px; letter-spacing: 0.3px; }
-    .badge { position: absolute; bottom: 6px; left: 6px; color: #ff9000; font-size: 10px; font-weight: 900; background: rgba(0,0,0,0.75); border: 1px solid rgba(255,144,0,0.5); padding: 1px 4px; border-radius: 1px; letter-spacing: 0.5px; }
-    .play-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.38); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.18s; }
-    .play-circle { width: 46px; height: 46px; background: rgba(255,144,0,0.92); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .dur {
+      position: absolute;
+      bottom: 6px; right: 6px;
+      background: rgba(0,0,0,0.85);
+      color: #fff;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 1px 5px;
+      border-radius: 2px;
+      letter-spacing: 0.3px;
+    }
+    .badge {
+      position: absolute;
+      bottom: 6px; left: 6px;
+      color: #ff9000;
+      font-size: 10px;
+      font-weight: 900;
+      background: rgba(0,0,0,0.75);
+      border: 1px solid rgba(255,144,0,0.5);
+      padding: 1px 4px;
+      border-radius: 1px;
+      letter-spacing: 0.5px;
+    }
+    .play-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.38);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.18s;
+    }
+    .play-circle {
+      width: 46px; height: 46px;
+      background: rgba(255,144,0,0.92);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
     .play-circle svg { width: 20px; height: 20px; fill: #fff; margin-left: 3px; }
 
     .card-info { padding: 6px 0 0; }
-    .card-title { font-size: 12px; font-weight: bold; color: #ddd; line-height: 1.4; margin-bottom: 3px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .card-title {
+      font-size: 12px;
+      font-weight: bold;
+      color: #ddd;
+      line-height: 1.4;
+      margin-bottom: 3px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
     .card-channel { font-size: 11px; color: #ff9000; margin-bottom: 2px; }
     .card-channel:hover { text-decoration: underline; }
     .card-stats { font-size: 11px; color: #666; display: flex; gap: 8px; }
 
-    .no-cards-msg { display: none; grid-column: 1 / -1; padding: 40px; text-align: center; color: #555; font-size: 14px; }
+    /* No results message */
+    .no-cards-msg {
+      display: none;
+      grid-column: 1 / -1;
+      padding: 40px;
+      text-align: center;
+      color: #555;
+      font-size: 14px;
+    }
 
     /* ─────────────────── FOOTER ─────────────────── */
     footer {
-      background: #000; border-top: 2px solid #ff9000;
-      padding: 24px 16px; margin-top: 24px;
-      display: flex; flex-direction: column; align-items: center; gap: 14px;
+      background: #000;
+      border-top: 2px solid #ff9000;
+      padding: 24px 16px;
+      margin-top: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
     }
     .foot-logo { font-size: 20px; font-weight: bold; line-height: 1; }
     .foot-logo span { background: orange; color: black; padding: 2px 6px; border-radius: 3px; }
@@ -345,23 +640,63 @@
     footer p { color: #3a3a3a; font-size: 11px; }
 
     /* ─────────────────── MODALS ─────────────────── */
-    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 999; align-items: center; justify-content: center; }
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+    }
     .overlay.open { display: flex; }
-    .modal { background: #1a1a1a; border: 1px solid #333; border-top: 3px solid #ff9000; border-radius: 3px; padding: 32px 36px; width: 100%; max-width: 380px; position: relative; }
-    .modal-x { position: absolute; top: 12px; right: 14px; background: none; border: none; color: #777; font-size: 20px; cursor: pointer; line-height: 1; }
+    .modal {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-top: 3px solid #ff9000;
+      border-radius: 3px;
+      padding: 32px 36px;
+      width: 100%;
+      max-width: 380px;
+      position: relative;
+    }
+    .modal-x {
+      position: absolute;
+      top: 12px; right: 14px;
+      background: none; border: none;
+      color: #777; font-size: 20px;
+      cursor: pointer; line-height: 1;
+    }
     .modal-x:hover { color: #fff; }
     .modal h2 { font-size: 20px; font-weight: 900; color: #fff; margin-bottom: 4px; }
     .modal h2 em { color: #ff9000; font-style: normal; }
     .modal p { color: #666; font-size: 12px; margin-bottom: 20px; }
-    .modal input { width: 100%; display: block; background: #2a2a2a; border: 1px solid #444; border-radius: 2px; outline: none; color: #ddd; padding: 10px 12px; font-size: 13px; margin-bottom: 10px; }
+    .modal input {
+      width: 100%; display: block;
+      background: #2a2a2a; border: 1px solid #444;
+      border-radius: 2px; outline: none;
+      color: #ddd; padding: 10px 12px;
+      font-size: 13px; margin-bottom: 10px;
+    }
     .modal input:focus { border-color: #ff9000; }
     .modal input::placeholder { color: #555; }
-    .modal-submit { width: 100%; background: #ff9000; color: #000; font-weight: 900; font-size: 14px; text-transform: uppercase; padding: 11px; border: none; border-radius: 2px; cursor: pointer; margin-top: 4px; }
+    .modal-submit {
+      width: 100%;
+      background: #ff9000; color: #000;
+      font-weight: 900; font-size: 14px;
+      text-transform: uppercase; padding: 11px;
+      border: none; border-radius: 2px;
+      cursor: pointer; margin-top: 4px;
+    }
     .modal-submit:hover { background: #e08000; }
     .modal-foot { text-align: center; margin-top: 14px; font-size: 12px; color: #666; }
     .modal-foot a { color: #ff9000; cursor: pointer; font-weight: bold; }
 
-    .upload-drop { border: 2px dashed #444; border-radius: 3px; padding: 28px; text-align: center; margin-bottom: 12px; cursor: pointer; }
+    .upload-drop {
+      border: 2px dashed #444; border-radius: 3px;
+      padding: 28px; text-align: center; margin-bottom: 12px;
+      cursor: pointer;
+    }
     .upload-drop:hover { border-color: #ff9000; }
     .upload-drop .ud-icon { font-size: 36px; margin-bottom: 6px; }
     .upload-drop p { font-size: 12px; color: #666; }
@@ -370,35 +705,41 @@
 </head>
 <body>
 
-<!-- ════════════════════════════════════════
-     INTRO VIDEO WRAP
-════════════════════════════════════════ -->
+<!-- VIDEO INTRO — place video.webm in the same folder as this file -->
 <div id="intro-video-wrap">
-  <video id="intro-video" src="video.webm" muted playsinline preload="auto"></video>
+  <video id="intro-video"
+    src="video.webm"
+    muted
+    playsinline
+    preload="auto"
+  ></video>
   <div id="intro-vignette"></div>
   <div id="intro-fadeout"></div>
-
-  <!-- PLAY SPLASH -->
-  <div id="ph-play-splash" onclick="startIntro()">
-    <button id="playBtn"></button>
-  </div>
+  <button id="sound-btn" onclick="unmuteVideo()">🔇 Tap for Sound</button>
 </div>
 
 <!-- Site — starts invisible, fades in after video ends -->
 <div id="site-wrap">
 
+<!-- SIDEBAR OVERLAY -->
 <div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
 
-<!-- SIDEBAR -->
+<!-- ═══════════════════════════════════════════════════════════
+     SIDEBAR — Like PornHub's left slide-in menu
+     ═══════════════════════════════════════════════════════════ -->
 <div class="sidebar" id="sidebar">
+
   <div class="sb-header">
     <div class="sb-logo">Phonk<span>hub</span></div>
     <button class="sb-close" onclick="closeSidebar()">&times;</button>
   </div>
+
   <div class="sb-search">
     <input type="text" placeholder="Search Phonkhub..." oninput="sidebarSearch(this.value)">
   </div>
+
   <div class="sb-section-label">Navigation</div>
+
   <div class="sb-item active" id="sb-home" onclick="navTo('all'); closeSidebar(); setSbActive('sb-home')">
     <span class="sb-icon">🏠</span> Home
   </div>
@@ -411,8 +752,10 @@
   <div class="sb-item" id="sb-top" onclick="navTo('top-rated'); closeSidebar(); setSbActive('sb-top')">
     <span class="sb-icon">⭐</span> Top Rated
   </div>
+
   <div class="sb-divider"></div>
   <div class="sb-section-label">Categories</div>
+
   <div class="sb-sub-item" onclick="navTo('trending'); closeSidebar()">🚗 Drift Phonk</div>
   <div class="sb-sub-item" onclick="navTo('trending'); closeSidebar()">🇷🇺 Russian Phonk</div>
   <div class="sb-sub-item" onclick="navTo('trending'); closeSidebar()">🌑 Dark Phonk</div>
@@ -421,8 +764,10 @@
   <div class="sb-sub-item" onclick="navTo('new-releases'); closeSidebar()">🎸 Memphis</div>
   <div class="sb-sub-item" onclick="navTo('trending'); closeSidebar()">⚡ Turbo Phonk</div>
   <div class="sb-sub-item" onclick="navTo('new-releases'); closeSidebar()">🎚️ Slowed + Reverb</div>
+
   <div class="sb-divider"></div>
   <div class="sb-section-label">Featured Channels</div>
+
   <div class="sb-channel">
     <div class="sb-channel-av">🎵</div>
     <div class="sb-channel-info">
@@ -451,17 +796,28 @@
       <div class="sb-channel-subs">1.4M subscribers</div>
     </div>
   </div>
+
   <div class="sb-divider"></div>
   <div class="sb-section-label">Account</div>
-  <div class="sb-item" onclick="om('m-login'); closeSidebar()"><span class="sb-icon">👤</span> Log In</div>
-  <div class="sb-item" onclick="om('m-signup'); closeSidebar()"><span class="sb-icon">✉️</span> Sign Up Free</div>
-  <div class="sb-item" onclick="om('m-upload'); closeSidebar()"><span class="sb-icon">⬆️</span> Upload Track</div>
+
+  <div class="sb-item" onclick="om('m-login'); closeSidebar()">
+    <span class="sb-icon">👤</span> Log In
+  </div>
+  <div class="sb-item" onclick="om('m-signup'); closeSidebar()">
+    <span class="sb-icon">✉️</span> Sign Up Free
+  </div>
+  <div class="sb-item" onclick="om('m-upload'); closeSidebar()">
+    <span class="sb-icon">⬆️</span> Upload Track
+  </div>
+
   <div class="sb-premium-box">
     <h4>Phonk<span>hub+</span></h4>
     <p>No ads · FLAC downloads · exclusive drops</p>
     <button class="sb-premium-btn" onclick="alert('Phonkhub+ — coming soon! 🔥')">Upgrade $4.99/mo</button>
   </div>
+
 </div>
+<!-- ═══ END SIDEBAR ═══ -->
 
 <!-- MODALS -->
 <div class="overlay" id="m-login">
@@ -530,7 +886,9 @@
   <div class="hamburger" onclick="openSidebar()">
     <span></span><span></span><span></span>
   </div>
+
   <div class="logo" onclick="navTo('all'); window.scrollTo({top:0,behavior:'smooth'})">Phonk<span>hub</span></div>
+
   <div class="search-form">
     <input type="text" id="si"
       placeholder="Search tracks, artists, Phonk,..."
@@ -542,6 +900,7 @@
       <svg viewBox="0 0 24 24"><path d="M21 20l-5.6-5.6a7 7 0 10-1.4 1.4L20 21l1-1zM10 16a6 6 0 110-12 6 6 0 010 12z"/></svg>
     </button>
   </div>
+
   <div class="header-right">
     <a class="h-upload" onclick="om('m-upload')">⬆ Upload</a>
     <button class="h-btn h-btn-ghost" onclick="om('m-login')">Log In</button>
@@ -551,23 +910,24 @@
 
 <!-- CATEGORY NAV -->
 <div class="cat-nav">
-  <a class="active" data-target="all"         onclick="navTo('all');          setNavActive(this)">Home</a>
-  <a               data-target="trending"     onclick="navTo('trending');     setNavActive(this)">Trending</a>
+  <a class="active" data-target="all"     onclick="navTo('all');          setNavActive(this)">Home</a>
+  <a               data-target="trending" onclick="navTo('trending');     setNavActive(this)">Trending</a>
   <a               data-target="new-releases" onclick="navTo('new-releases'); setNavActive(this)">New Releases</a>
   <a               data-target="top-rated"    onclick="navTo('top-rated');    setNavActive(this)">Top Rated</a>
-  <a               data-target="trending"     onclick="navTo('trending');     setNavActive(this)">Drift Phonk</a>
-  <a               data-target="trending"     onclick="navTo('trending');     setNavActive(this)">Russian Phonk</a>
-  <a               data-target="trending"     onclick="navTo('trending');     setNavActive(this)">Dark Phonk</a>
+  <a               data-target="trending" onclick="navTo('trending');     setNavActive(this)">Drift Phonk</a>
+  <a               data-target="trending" onclick="navTo('trending');     setNavActive(this)">Russian Phonk</a>
+  <a               data-target="trending" onclick="navTo('trending');     setNavActive(this)">Dark Phonk</a>
   <a               data-target="new-releases" onclick="navTo('new-releases'); setNavActive(this)">Lofi Phonk</a>
-  <a               data-target="trending"     onclick="navTo('trending');     setNavActive(this)">Cowbell</a>
+  <a               data-target="trending" onclick="navTo('trending');     setNavActive(this)">Cowbell</a>
   <a               data-target="new-releases" onclick="navTo('new-releases'); setNavActive(this)">Memphis</a>
-  <a               data-target="trending"     onclick="navTo('trending');     setNavActive(this)">Turbo Phonk</a>
+  <a               data-target="trending" onclick="navTo('trending');     setNavActive(this)">Turbo Phonk</a>
   <a               data-target="new-releases" onclick="navTo('new-releases'); setNavActive(this)">Slowed + Reverb</a>
   <a               data-target="top-rated"    onclick="navTo('top-rated');    setNavActive(this)">Playlists</a>
 </div>
 
 <!-- PAGE -->
 <div class="page" id="top">
+
   <div class="welcome-bar" id="welcome-bar">
     <div>
       <h2>Welcome to <span>Phonkhub</span></h2>
@@ -583,7 +943,9 @@
       <a class="see-all" onclick="navTo('trending'); setNavActive(document.querySelector('.cat-nav a[data-target=trending]'))">View All ›</a>
     </div>
     <div class="grid" id="grid-trending">
-      <a class="card" href="https://www.youtube.com/watch?v=G8yr82oFf8g" target="_blank" data-title="N Word Phonk" data-artist="Sigeon Pex Lover">
+
+      <a class="card" href="https://www.youtube.com/watch?v=G8yr82oFf8g&list=RDG8yr82oFf8g&start_radio=1" target="_blank"
+         data-title="N Word Phonk" data-artist="Sigeon Pex Lover">
         <div class="thumb">
           <img src="https://tse3.mm.bing.net/th/id/OIP.PBs6ftFwVYducp80i1ChUgHaHa?rs=1&pid=ImgDetMain&o=7&rm=3" alt="">
           <div class="badge">4K UHD</div><div class="dur">3:14</div>
@@ -596,7 +958,9 @@
           <div class="card-stats"><span>5.2M views</span><span>2 days ago</span></div>
         </div>
       </a>
-      <a class="card" href="https://www.youtube.com/watch?v=BtZksmrqX6c" target="_blank" data-title="Mommy Phonk" data-artist="Men Kisser">
+
+      <a class="card" href="https://www.youtube.com/watch?v=BtZksmrqX6c" target="_blank"
+         data-title="Mommy Phonk" data-artist="Men Kisser">
         <div class="thumb">
           <img src="https://tse2.mm.bing.net/th/id/OIP.6E4v_uwPdFkMpxFOApEkLQHaGn?rs=1&pid=ImgDetMain&o=7&rm=3" alt="">
           <div class="badge">HD</div><div class="dur">2:58</div>
@@ -609,7 +973,9 @@
           <div class="card-stats"><span>7.4M views</span><span>5 days ago</span></div>
         </div>
       </a>
-      <a class="card" href="https://music.apple.com/ru/album/mango-phonk-single/1780817139" target="_blank" data-title="Neon Ride" data-artist="LXST CXNTURY">
+
+      <a class="card" href="https://music.apple.com/ru/album/mango-phonk-single/1780817139" target="_blank"
+         data-title="Neon Ride" data-artist="LXST CXNTURY">
         <div class="thumb">
           <img src="https://us-tuna-sounds-images.voicemod.net/4bc46cec-36ba-4e4d-a0fa-8a9c8389f3ea-1721996484833.png" alt="">
           <div class="dur">2:58</div>
@@ -622,7 +988,9 @@
           <div class="card-stats"><span>3.8M views</span><span>4 days ago</span></div>
         </div>
       </a>
-      <a class="card" href="YOUR_LINK_HERE" target="_blank" data-title="Dark Emo Dih" data-artist="KSLV Noh">
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Dark Emo Dih" data-artist="KSLV Noh">
         <div class="thumb">
           <img src="https://i.ytimg.com/vi/Sh1zT2YDPOk/maxresdefault.jpg" alt="">
           <div class="badge">HD</div><div class="dur">4:02</div>
@@ -635,7 +1003,9 @@
           <div class="card-stats"><span>2.1M views</span><span>1 week ago</span></div>
         </div>
       </a>
-      <a class="card" href="YOUR_LINK_HERE" target="_blank" data-title="Soggy Dih" data-artist="Night Engine">
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Soggy Dih" data-artist="Night Engine">
         <div class="thumb">
           <img src="https://tse4.mm.bing.net/th/id/OIP.zboD8zbAe6BsB8asKltAMQHaEK?rs=1&pid=ImgDetMain&o=7&rm=3" alt="">
           <div class="badge">UHD</div><div class="dur">3:33</div>
@@ -648,7 +1018,9 @@
           <div class="card-stats"><span>1.6M views</span><span>3 days ago</span></div>
         </div>
       </a>
-      <a class="card" href="YOUR_LINK_HERE" target="_blank" data-title="Dark Daddy Phonk" data-artist="PHARAOH">
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Dark Daddy Phonk" data-artist="PHARAOH">
         <div class="thumb">
           <img src="https://tse3.mm.bing.net/th/id/OIP.P_QVfEh74AEdPfpHg-xjAAHaHa?rs=1&pid=ImgDetMain&o=7&rm=3" alt="">
           <div class="dur">4:20</div>
@@ -661,7 +1033,9 @@
           <div class="card-stats"><span>920K views</span><span>6 days ago</span></div>
         </div>
       </a>
-      <a class="card" href="YOUR_LINK_HERE" target="_blank" data-title="Drift Mode" data-artist="KORDHELL">
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Drift Mode" data-artist="KORDHELL">
         <div class="thumb">
           <img src="https://images.unsplash.com/photo-1519996529931-28324d5a630e?w=400&q=80" alt="">
           <div class="badge">HD</div><div class="dur">3:44</div>
@@ -674,7 +1048,9 @@
           <div class="card-stats"><span>18M views</span><span>6 months ago</span></div>
         </div>
       </a>
-      <a class="card" href="YOUR_LINK_HERE" target="_blank" data-title="Murder In My Mind" data-artist="KORDHELL">
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Murder In My Mind" data-artist="KORDHELL">
         <div class="thumb">
           <img src="https://images.unsplash.com/photo-1506157786151-b8491531f063?w=400&q=80" alt="">
           <div class="badge">HD</div><div class="dur">2:29</div>
@@ -687,7 +1063,9 @@
           <div class="card-stats"><span>24M views</span><span>1 year ago</span></div>
         </div>
       </a>
-      <a class="card" href="YOUR_LINK_HERE" target="_blank" data-title="Ghost Rider Phonk" data-artist="Soudiere">
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Ghost Rider Phonk" data-artist="Soudiere">
         <div class="thumb">
           <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=80" alt="">
           <div class="dur">3:12</div>
@@ -700,7 +1078,9 @@
           <div class="card-stats"><span>11M views</span><span>8 months ago</span></div>
         </div>
       </a>
-      <a class="card" href="YOUR_LINK_HERE" target="_blank" data-title="Late Night Drive Extended" data-artist="night lovell">
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Late Night Drive Extended" data-artist="night lovell">
         <div class="thumb">
           <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&q=80" alt="">
           <div class="badge">HD</div><div class="dur">4:08</div>
@@ -713,6 +1093,7 @@
           <div class="card-stats"><span>9M views</span><span>10 months ago</span></div>
         </div>
       </a>
+
       <div class="no-cards-msg" id="no-trending">😔 No results found</div>
     </div>
   </div>
@@ -724,7 +1105,9 @@
       <a class="see-all" onclick="navTo('new-releases'); setNavActive(document.querySelector('.cat-nav a[data-target=new-releases]'))">View All ›</a>
     </div>
     <div class="grid" id="grid-new">
-      <a class="card" href="YOUR_LINK_HERE" target="_blank" data-title="Midnight Engine" data-artist="Ghost Rider">
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Midnight Engine" data-artist="Ghost Rider">
         <div class="thumb">
           <img src="https://images.unsplash.com/photo-1507874457470-272b3c8d8ee2?w=400&q=80" alt="">
           <div class="badge">HD</div><div class="dur">3:29</div>
@@ -736,7 +1119,9 @@
           <div class="card-stats"><span>44K views</span><span>1 hour ago</span></div>
         </div>
       </a>
-      <a class="card" href="YOUR_LINK_HERE" target="_blank" data-title="Slow Burn" data-artist="Phonk Killer">
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Slow Burn" data-artist="Phonk Killer">
         <div class="thumb">
           <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&q=80" alt="">
           <div class="dur">2:47</div>
@@ -748,7 +1133,9 @@
           <div class="card-stats"><span>12K views</span><span>3 hours ago</span></div>
         </div>
       </a>
-      <a class="card" href="YOUR_LINK_HERE" target="_blank" data-title="Late Night Drive" data-artist="Øneheart">
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Late Night Drive" data-artist="Øneheart">
         <div class="thumb">
           <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&q=80" alt="">
           <div class="badge">HD</div><div class="dur">3:51</div>
@@ -760,7 +1147,9 @@
           <div class="card-stats"><span>8K views</span><span>5 hours ago</span></div>
         </div>
       </a>
-      <a class="card" href="YOUR_LINK_HERE" target="_blank" data-title="Deep Drift" data-artist="RXDXVIL">
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Deep Drift" data-artist="RXDXVIL">
         <div class="thumb">
           <img src="https://images.unsplash.com/photo-1494232410401-ad00d5433cfa?w=400&q=80" alt="">
           <div class="dur">4:11</div>
@@ -772,7 +1161,9 @@
           <div class="card-stats"><span>31K views</span><span>6 hours ago</span></div>
         </div>
       </a>
-      <a class="card" href="YOUR_LINK_HERE" target="_blank" data-title="Underground Hits Vol 3" data-artist="Kordhell">
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Underground Hits Vol 3" data-artist="Kordhell">
         <div class="thumb">
           <img src="https://images.unsplash.com/photo-1492724441997-5dc865305da7?w=400&q=80" alt="">
           <div class="badge">HD</div><div class="dur">2:33</div>
@@ -784,7 +1175,9 @@
           <div class="card-stats"><span>5K views</span><span>8 hours ago</span></div>
         </div>
       </a>
-      <a class="card" href="YOUR_LINK_HERE" target="_blank" data-title="Drift Mode Activated" data-artist="Tveth">
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Drift Mode Activated" data-artist="Tveth">
         <div class="thumb">
           <img src="https://images.unsplash.com/photo-1519996529931-28324d5a630e?w=400&q=80" alt="">
           <div class="dur">3:07</div>
@@ -796,7 +1189,9 @@
           <div class="card-stats"><span>2K views</span><span>10 hours ago</span></div>
         </div>
       </a>
-      <a class="card" href="YOUR_LINK_HERE" target="_blank" data-title="Shadow Bass" data-artist="Night Engine">
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Shadow Bass" data-artist="Night Engine">
         <div class="thumb">
           <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&q=80" alt="">
           <div class="badge">HD</div><div class="dur">3:55</div>
@@ -808,7 +1203,9 @@
           <div class="card-stats"><span>890K views</span><span>2 weeks ago</span></div>
         </div>
       </a>
-      <a class="card" href="YOUR_LINK_HERE" target="_blank" data-title="Dark Memphis" data-artist="KSLV Noh">
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Dark Memphis" data-artist="KSLV Noh">
         <div class="thumb">
           <img src="https://images.unsplash.com/photo-1511376777868-611b54f68947?w=400&q=80" alt="">
           <div class="dur">4:02</div>
@@ -820,7 +1217,9 @@
           <div class="card-stats"><span>2.1M views</span><span>1 week ago</span></div>
         </div>
       </a>
-      <a class="card" href="YOUR_LINK_HERE" target="_blank" data-title="Tokyo Drift Phonk" data-artist="DJ Nightfall">
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Tokyo Drift Phonk" data-artist="DJ Nightfall">
         <div class="thumb">
           <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&q=80" alt="">
           <div class="badge">HD</div><div class="dur">3:14</div>
@@ -832,7 +1231,9 @@
           <div class="card-stats"><span>5.2M views</span><span>2 days ago</span></div>
         </div>
       </a>
-      <a class="card" href="YOUR_LINK_HERE" target="_blank" data-title="Neon Ride" data-artist="LXST CXNTURY">
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Neon Ride" data-artist="LXST CXNTURY">
         <div class="thumb">
           <img src="https://images.unsplash.com/photo-1497032205916-ac775f0649ae?w=400&q=80" alt="">
           <div class="dur">2:58</div>
@@ -844,6 +1245,7 @@
           <div class="card-stats"><span>3.8M views</span><span>4 days ago</span></div>
         </div>
       </a>
+
       <div class="no-cards-msg" id="no-new">😔 No results found</div>
     </div>
   </div>
@@ -855,7 +1257,9 @@
       <a class="see-all" onclick="navTo('top-rated'); setNavActive(document.querySelector('.cat-nav a[data-target=top-rated]'))">View All ›</a>
     </div>
     <div class="grid" id="grid-top">
-      <a class="card" href="YOUR_LINK_HERE" target="_blank" data-title="Drift Mode" data-artist="KORDHELL">
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Drift Mode" data-artist="KORDHELL">
         <div class="thumb">
           <img src="https://images.unsplash.com/photo-1519996529931-28324d5a630e?w=400&q=80" alt="">
           <div class="badge">HD</div><div class="dur">3:44</div>
@@ -867,7 +1271,9 @@
           <div class="card-stats"><span>18M views</span><span>6 months ago</span></div>
         </div>
       </a>
-      <a class="card" href="YOUR_LINK_HERE" target="_blank" data-title="Murder In My Mind" data-artist="KORDHELL">
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Murder In My Mind" data-artist="KORDHELL">
         <div class="thumb">
           <img src="https://images.unsplash.com/photo-1506157786151-b8491531f063?w=400&q=80" alt="">
           <div class="badge">HD</div><div class="dur">2:29</div>
@@ -879,7 +1285,9 @@
           <div class="card-stats"><span>24M views</span><span>1 year ago</span></div>
         </div>
       </a>
-      <a class="card" href="YOUR_LINK_HERE" target="_blank" data-title="Ghost Rider Phonk" data-artist="Soudiere">
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Ghost Rider Phonk" data-artist="Soudiere">
         <div class="thumb">
           <img src="https://images.unsplash.com/photo-1492724441997-5dc865305da7?w=400&q=80" alt="">
           <div class="dur">3:12</div>
@@ -891,7 +1299,9 @@
           <div class="card-stats"><span>11M views</span><span>8 months ago</span></div>
         </div>
       </a>
-      <a class="card" href="YOUR_LINK_HERE" target="_blank" data-title="Late Night Drive Extended" data-artist="night lovell">
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Late Night Drive Extended" data-artist="night lovell">
         <div class="thumb">
           <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&q=80" alt="">
           <div class="badge">HD</div><div class="dur">4:08</div>
@@ -903,7 +1313,9 @@
           <div class="card-stats"><span>9M views</span><span>10 months ago</span></div>
         </div>
       </a>
-      <a class="card" href="YOUR_LINK_HERE" target="_blank" data-title="Street Ghosts" data-artist="DVRST">
+
+      <a class="card" href="YOUR_LINK_HERE" target="_blank"
+         data-title="Street Ghosts" data-artist="DVRST">
         <div class="thumb">
           <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=80" alt="">
           <div class="badge">HD</div><div class="dur">3:33</div>
@@ -915,10 +1327,12 @@
           <div class="card-stats"><span>7.4M views</span><span>5 days ago</span></div>
         </div>
       </a>
+
       <div class="no-cards-msg" id="no-top">😔 No results found</div>
     </div>
   </div>
-</div>
+
+</div><!-- end .page -->
 
 <!-- FOOTER -->
 <footer>
@@ -940,40 +1354,51 @@
   <p>© 2026 Phonkhub — Built for phonk lovers</p>
 </footer>
 
-</div><!-- end #site-wrap -->
+</div><!-- ╚══ end #site-wrap ══╝ -->
 
 <script>
-/* ══════════════════════════════════════════════
-   INTRO — PH-style splash → video → site
-══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════
+   VIDEO INTRO
+   - Immediately tries to unmute — works if browser allows
+   - If still muted, shows a small "tap for sound" button
+   - Video cannot be paused
+   - On end: fades to black → video removed → site fades in
+═══════════════════════════════════════════════════════ */
 (function () {
-  const video  = document.getElementById('intro-video');
-  const wrap   = document.getElementById('intro-video-wrap');
-  const splash = document.getElementById('ph-play-splash');
-  const site   = document.getElementById('site-wrap');
+  const video = document.getElementById('intro-video');
+  const wrap = document.getElementById('intro-video-wrap');
+  const soundBtn = document.getElementById('sound-btn');
+  const site = document.getElementById('site-wrap');
 
-  let soundUnlocked = false;
+  let started = false;
 
-  // IMPORTANT: do NOT autoplay
-  video.pause();
-  video.currentTime = 0;
+  // initial state
   video.muted = true;
+  video.currentTime = 0;
+  video.pause();
 
-  window.startIntro = function () {
-    if (soundUnlocked) return;
-    soundUnlocked = true;
+  function startIntro() {
+    if (started) return;
+    started = true;
 
-    // start ONLY after click
     video.muted = false;
+    video.volume = 1;
 
     video.play().catch(() => {});
 
-    splash.classList.add('hiding');
-    setTimeout(() => splash.remove(), 500);
-  };
+    soundBtn.style.display = 'none';
+  }
+
+  wrap.addEventListener('click', startIntro);
+  soundBtn.addEventListener('click', startIntro);
+
+  // ❌ IMPORTANT: do NOT force replay on pause anymore
+  // (removed the pause event listener completely)
 
   video.addEventListener('ended', () => {
-    site.classList.add('visible');
+    site.classList.add('visible'); // fade in site immediately
+
+    // remove intro instantly (no long delay)
     wrap.remove();
   });
 
@@ -981,18 +1406,11 @@
     site.classList.add('visible');
     wrap.remove();
   });
-
-  setTimeout(() => {
-    if (video.readyState === 0) {
-      site.classList.add('visible');
-      wrap.remove();
-    }
-  }, 3000);
 })();
   
-/* ══════════════════════════════════════════════
+/* ═══════════════════════════════════════════
    MODALS
-══════════════════════════════════════════════ */
+═══════════════════════════════════════════ */
 function om(id) { document.getElementById(id).classList.add('open'); document.body.style.overflow = 'hidden'; }
 function cm(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow = ''; }
 function sm(a, b) { cm(a); setTimeout(() => om(b), 160); }
@@ -1010,9 +1428,9 @@ document.addEventListener('keydown', e => {
   }
 });
 
-/* ══════════════════════════════════════════════
+/* ═══════════════════════════════════════════
    SIDEBAR
-══════════════════════════════════════════════ */
+═══════════════════════════════════════════ */
 function openSidebar() {
   document.getElementById('sidebar').classList.add('open');
   document.getElementById('sb-overlay').classList.add('show');
@@ -1028,16 +1446,19 @@ function setSbActive(id) {
   const el = document.getElementById(id);
   if (el) el.classList.add('active');
 }
+
+/* Sidebar search — filters the sidebar channel list */
 function sidebarSearch(val) {
   const q = val.toLowerCase().trim();
   document.querySelectorAll('.sb-sub-item, .sb-channel').forEach(el => {
-    el.style.display = (!q || el.textContent.toLowerCase().includes(q)) ? '' : 'none';
+    const text = el.textContent.toLowerCase();
+    el.style.display = (!q || text.includes(q)) ? '' : 'none';
   });
 }
 
-/* ══════════════════════════════════════════════
-   LANGUAGE
-══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════
+   LANGUAGE SELECTOR
+═══════════════════════════════════════════ */
 function toggleLang(e) {
   e.stopPropagation();
   document.getElementById('lang-drop').classList.toggle('open');
@@ -1048,19 +1469,25 @@ function setLang(code, name, htmlLang) {
   document.getElementById('lang-drop').classList.remove('open');
   document.querySelectorAll('.lang-opt').forEach(o => o.classList.remove('selected'));
   event.target.closest('.lang-opt').classList.add('selected');
-  if (code !== 'EN') alert('Full ' + name + ' translation coming soon! 🌐');
+  if (code !== 'EN') {
+    alert('Full ' + name + ' translation coming soon! 🌐\nSite language set to ' + name + '.');
+  }
 }
-document.addEventListener('click', () => document.getElementById('lang-drop').classList.remove('open'));
+document.addEventListener('click', () => {
+  document.getElementById('lang-drop').classList.remove('open');
+});
 
-/* ══════════════════════════════════════════════
-   NAVIGATION
-══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════
+   NAVIGATION — show/hide sections
+═══════════════════════════════════════════ */
 const ALL_SECTIONS = ['trending', 'new-releases', 'top-rated'];
+
 function navTo(target) {
   const welcome = document.getElementById('welcome-bar');
   if (target === 'all') {
     ALL_SECTIONS.forEach(id => { document.getElementById(id).style.display = 'block'; });
     welcome.style.display = 'flex';
+    // Restore all cards
     document.querySelectorAll('.card').forEach(c => c.style.display = 'block');
     document.querySelectorAll('.no-cards-msg').forEach(m => m.style.display = 'none');
     document.getElementById('si').value = '';
@@ -1073,58 +1500,90 @@ function navTo(target) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
+
 function setNavActive(el) {
   if (!el) return;
   document.querySelectorAll('.cat-nav a').forEach(a => a.classList.remove('active'));
   el.classList.add('active');
 }
 
-/* ══════════════════════════════════════════════
-   SEARCH
-══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════
+   SEARCH — live filtering with dropdown
+═══════════════════════════════════════════ */
+// All cards data for search
 const CARD_DATA = [];
 document.querySelectorAll('.card').forEach(card => {
-  CARD_DATA.push({ title: card.getAttribute('data-title') || '', artist: card.getAttribute('data-artist') || '', href: card.getAttribute('href') || '#', el: card });
+  CARD_DATA.push({
+    title:  card.getAttribute('data-title') || '',
+    artist: card.getAttribute('data-artist') || '',
+    href:   card.getAttribute('href') || '#',
+    el:     card
+  });
 });
 
 function liveSearch(val) {
   const q = val.toLowerCase().trim();
   const sd = document.getElementById('sd');
+
   if (!q) {
     sd.style.display = 'none';
+    // If we were in search mode, restore everything
     if (document.body.getAttribute('data-searching')) {
       document.body.removeAttribute('data-searching');
       navTo('all');
     }
     return;
   }
+
+  // Mark we're searching
   document.body.setAttribute('data-searching', '1');
+
+  // Show all sections while searching
   ALL_SECTIONS.forEach(id => { document.getElementById(id).style.display = 'block'; });
   document.getElementById('welcome-bar').style.display = 'none';
+
+  // Filter cards
+  let matchCount = 0;
   CARD_DATA.forEach(item => {
     const match = item.title.toLowerCase().includes(q) || item.artist.toLowerCase().includes(q);
     item.el.style.display = match ? 'block' : 'none';
+    if (match) matchCount++;
   });
+
+  // Show/hide "no results" per section
   ['trending','new-releases','top-rated'].forEach((id, i) => {
     const ids = ['no-trending','no-new','no-top'];
-    const gridIds = ['grid-trending','grid-new','grid-top'];
-    const grid = document.getElementById(gridIds[i]);
+    const grid = document.getElementById('grid-' + (['trending','new','top'][i]));
     const visible = grid ? [...grid.querySelectorAll('.card')].some(c => c.style.display !== 'none') : false;
     const noMsg = document.getElementById(ids[i]);
     if (noMsg) noMsg.style.display = visible ? 'none' : 'block';
   });
-  const matches = CARD_DATA.filter(d => d.title.toLowerCase().includes(q) || d.artist.toLowerCase().includes(q)).slice(0, 8);
+
+  // Build dropdown
+  const matches = CARD_DATA.filter(d =>
+    d.title.toLowerCase().includes(q) || d.artist.toLowerCase().includes(q)
+  ).slice(0, 8);
+
   if (matches.length === 0) {
     sd.innerHTML = '<div class="no-results">No tracks found for "' + escHtml(val) + '"</div>';
   } else {
-    sd.innerHTML = matches.map(d => `<div class="sd-item" onclick="window.open('${d.href}','_blank')"><span>🎵</span><div class="sd-text"><div class="sd-title">${escHtml(d.title)}</div><div class="sd-sub">${escHtml(d.artist)}</div></div></div>`).join('');
+    sd.innerHTML = matches.map(d => `
+      <div class="sd-item" onclick="window.open('${d.href}','_blank')">
+        <span>🎵</span>
+        <div class="sd-text">
+          <div class="sd-title">${escHtml(d.title)}</div>
+          <div class="sd-sub">${escHtml(d.artist)}</div>
+        </div>
+      </div>`).join('');
   }
   sd.style.display = 'block';
 }
+
 function doSearch() {
   const val = document.getElementById('si').value.trim();
   if (val) liveSearch(val);
 }
+
 function escHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
