@@ -947,27 +947,29 @@
    INTRO — PH-style splash → video → site
 ══════════════════════════════════════════════ */
 (function () {
-  const video   = document.getElementById('intro-video');
-  const wrap    = document.getElementById('intro-video-wrap');
-  const splash  = document.getElementById('ph-play-splash');
-  const site    = document.getElementById('site-wrap');
+  const video  = document.getElementById('intro-video');
+  const wrap   = document.getElementById('intro-video-wrap');
+  const splash = document.getElementById('ph-play-splash');
+  const site   = document.getElementById('site-wrap');
+
   let soundUnlocked = false;
 
-  // Start playing immediately, muted (browsers allow this)
+  // IMPORTANT: do NOT autoplay
+  video.pause();
+  video.currentTime = 0;
   video.muted = true;
-  video.volume = 1;
-  video.play().catch(() => {});
 
-  // Clicking the splash button ONLY unmutes — video is already running
   window.startIntro = function () {
     if (soundUnlocked) return;
     soundUnlocked = true;
 
+    // start ONLY after click
     video.muted = false;
 
-    // Fade out splash but keep video playing underneath
+    video.play().catch(() => {});
+
     splash.classList.add('hiding');
-    setTimeout(() => { splash.remove(); }, 500);
+    setTimeout(() => splash.remove(), 500);
   };
 
   video.addEventListener('ended', () => {
@@ -980,16 +982,14 @@
     wrap.remove();
   });
 
-  // Safety fallback if no video file
   setTimeout(() => {
-    if (!wrap.parentNode) return;
     if (video.readyState === 0) {
       site.classList.add('visible');
       wrap.remove();
     }
   }, 3000);
 })();
-
+  
 /* ══════════════════════════════════════════════
    MODALS
 ══════════════════════════════════════════════ */
